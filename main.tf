@@ -39,9 +39,9 @@ resource "azurerm_windows_virtual_machine_scale_set" "main" {
   name                 = "${var.prefix}vmss"
   resource_group_name  = azurerm_resource_group.main.name
   location             = azurerm_resource_group.main.location
-  sku                  = "Standard_F2"
+  sku                  = "Standard_F2s_v2"
   instances            = 2
-  admin_username       = "adminuser"
+  admin_username       = var.admin_user
   admin_password       = var.admin_password
   computer_name_prefix = var.prefix
 
@@ -141,4 +141,14 @@ resource "azurerm_virtual_machine_scale_set_extension" "vm_extension_install_iis
         "commandToExecute": "powershell -ExecutionPolicy Unrestricted Install-WindowsFeature -Name Web-Server -IncludeAllSubFeature -IncludeManagementTools"
     }
 SETTINGS
+
+  provisioner "local-exec" {
+    interpreter = ["cmd", "/c"]
+    command     = "az vmss wait --created -n ${azurerm_windows_virtual_machine_scale_set.main.name} -g ${azurerm_resource_group.main.name}"
+  }
+
+  provisioner "local-exec" {
+    interpreter = ["cmd", "/c"]
+    command     = "az vmss update-instances --instance-ids * -n ${azurerm_windows_virtual_machine_scale_set.main.name} -g ${azurerm_resource_group.main.name}"
+  }
 }
