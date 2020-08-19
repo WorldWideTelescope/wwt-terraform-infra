@@ -33,6 +33,7 @@ resource "azurerm_public_ip_prefix" "main" {
   name                = "${var.prefix}-pip"
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
+  prefix_length       = 30
 }
 
 resource "azurerm_windows_virtual_machine_scale_set" "main" {
@@ -147,6 +148,6 @@ SETTINGS
   }
 
   provisioner "local-exec" {
-    command     = "az vmss update-instances --instance-ids * -n ${azurerm_windows_virtual_machine_scale_set.main.name} -g ${azurerm_resource_group.main.name}"
+    command     = "az vmss update-instances --instance-ids '*' -n ${azurerm_windows_virtual_machine_scale_set.main.name} -g ${azurerm_resource_group.main.name}"
   }
 }
