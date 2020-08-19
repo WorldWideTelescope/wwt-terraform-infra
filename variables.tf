@@ -27,3 +27,13 @@ variable "admin_user" {
 variable "admin_password" {
    description = "Default password for admin account"
 }
+
+variable "vm_sku" {
+   description = "The VM size to use for the VMSS, defaults to dual core w/4gb memory - low perf tier"
+   default = "Standard_A2"
+}
+
+variable "vm_instance_count" {
+   description = "How many instances to deploy to the VMSS"
+   default = 2
+}
