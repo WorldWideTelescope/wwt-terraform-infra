@@ -46,6 +46,10 @@ resource "azurerm_windows_virtual_machine_scale_set" "main" {
   admin_password       = var.admin_password
   computer_name_prefix = var.prefix
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   source_image_reference {
     publisher = "MicrosoftWindowsServer"
     offer     = "WindowsServer"
@@ -150,4 +154,27 @@ SETTINGS
   provisioner "local-exec" {
     command     = "az vmss update-instances --instance-ids '*' -n ${azurerm_windows_virtual_machine_scale_set.main.name} -g ${azurerm_resource_group.main.name}"
   }
+}
+
+resource "azurerm_key_vault" "wwt" {
+  name                        = "${var.prefix}kv"
+  resource_group_name         = azurerm_resource_group.main.name
+  location                    = azurerm_resource_group.main.location
+  enabled_for_disk_encryption = true
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  soft_delete_enabled         = true
+  purge_protection_enabled    = false
+
+  sku_name = "standard"
+}
+
+data "azurerm_client_config" "current" {
+}
+
+# Give the VM access to the KeyVault via Managed Identity
+resource "azurerm_key_vault_access_policy" "vm" {
+  key_vault_id            = azurerm_key_vault.wwt.id
+  tenant_id               = data.azurerm_client_config.current.tenant_id
+  object_id               = azurerm_windows_virtual_machine_scale_set.main.identity.0.principal_id
+  secret_permissions      = ["get", "list"]
 }
