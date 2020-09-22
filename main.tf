@@ -171,10 +171,61 @@ resource "azurerm_key_vault" "wwt" {
 data "azurerm_client_config" "current" {
 }
 
-# Give the VM access to the KeyVault via Managed Identity
+resource "azurerm_app_service_plan" "wwt" {
+  name                = "${var.prefix}-app-service-plan"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+
+  sku {
+    tier = "Standard"
+    size = "S1"
+  }
+}
+
+resource "azurerm_app_service" "wwt" {
+  name                = "${var.prefix}-app-service"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  app_service_plan_id = azurerm_app_service_plan.wwt.id
+
+  site_config {
+    dotnet_framework_version = "v4.0"
+  }
+  
+  app_settings = {
+    "UseAzurePlateFiles" = "true"
+    "AzurePlateFileContainer" = azurerm_storage_account.datatier.primary_blob_endpoint
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+# Give the VM access to resources
 resource "azurerm_key_vault_access_policy" "vm" {
   key_vault_id            = azurerm_key_vault.wwt.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
   object_id               = azurerm_windows_virtual_machine_scale_set.main.identity.0.principal_id
   secret_permissions      = ["get", "list"]
+}
+
+resource "azurerm_role_assignment" "vm_storage" {
+  scope                = azurerm_storage_account.datatier.id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = azurerm_windows_virtual_machine_scale_set.main.identity.0.principal_id
+}
+
+# Give the app service roles
+resource "azurerm_key_vault_access_policy" "appservice" {
+  key_vault_id            = azurerm_key_vault.wwt.id
+  tenant_id               = data.azurerm_client_config.current.tenant_id
+  object_id               = azurerm_app_service.wwt.identity.0.principal_id
+  secret_permissions      = ["get", "list"]
+}
+
+resource "azurerm_role_assignment" "appservice_storage" {
+  scope                = azurerm_storage_account.datatier.id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = azurerm_app_service.wwt.identity.0.principal_id
 }
