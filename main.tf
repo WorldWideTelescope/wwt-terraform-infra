@@ -194,7 +194,8 @@ resource "azurerm_app_service" "wwt" {
   
   app_settings = {
     "UseAzurePlateFiles" = "true"
-    "AzurePlateFileContainer" = azurerm_storage_account.datatier.primary_blob_endpoint
+    "AzurePlateFileStorageAccount" = azurerm_storage_account.datatier.primary_blob_endpoint
+    "KeyVaultName" = azurerm_key_vault.wwt.name
   }
 
   identity {
