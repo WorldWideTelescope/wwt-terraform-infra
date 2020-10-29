@@ -42,7 +42,7 @@ resource "azurerm_app_service_plan" "wwt" {
 }
 
 resource "azurerm_redis_cache" "wwt" {
-  name                = "wwt-cache"
+  name                = "${var.prefix}-cache"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   capacity            = 2
@@ -65,6 +65,13 @@ resource "azurerm_key_vault_secret" "redis" {
   }
 }
 
+resource "azurerm_application_insights" "wwt" {
+  name                = "${var.prefix}insights"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  application_type    = "web"
+}
+
 resource "azurerm_app_service" "wwt" {
   name                = "${var.prefix}-app-service"
   location            = azurerm_resource_group.main.location
@@ -81,6 +88,7 @@ resource "azurerm_app_service" "wwt" {
     #"AzurePlateFileStorageAccount" = azurerm_storage_account.datatier.primary_blob_endpoint
     "KeyVaultName" = azurerm_key_vault.wwt.name
     "SlidingExpiration" = "30.00:00:00" # default to 30 days to keep cached items
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
   }
 
   identity {
@@ -100,4 +108,11 @@ resource "azurerm_role_assignment" "appservice_storage" {
   scope                = azurerm_storage_account.datatier.id
   role_definition_name = "Storage Blob Data Reader"
   principal_id         = azurerm_app_service.wwt.identity.0.principal_id
+}
+
+resource "azurerm_key_vault_access_policy" "user" {
+  key_vault_id            = azurerm_key_vault.wwt.id
+  tenant_id               = data.azurerm_client_config.current.tenant_id
+  object_id               = data.azurerm_client_config.current.object_id
+  secret_permissions      = ["get", "set", "list"]
 }
