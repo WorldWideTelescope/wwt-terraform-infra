@@ -105,6 +105,8 @@ resource "azurerm_app_service" "wwt" {
   app_service_plan_id = azurerm_app_service_plan.wwt.id
 
   site_config {
+    always_on = true
+    default_documents = ["hostingstart.html"]
     dotnet_framework_version = "v4.0"
   }
 
