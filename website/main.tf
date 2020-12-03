@@ -7,13 +7,22 @@ resource "azurerm_resource_group" "main" {
   location = var.location
 }
 
-resource "azurerm_storage_account" "datatier" {
-  name                     = "${var.prefix}storage"
-  resource_group_name      = azurerm_resource_group.main.name
-  location                 = azurerm_resource_group.main.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-}
+# Uncomment if using data tier tied to this script. This is *not*
+# the case for WWT production.
+#
+#resource "azurerm_storage_account" "datatier" {
+#  name                     = "${var.prefix}storage"
+#  resource_group_name      = azurerm_resource_group.main.name
+#  location                 = azurerm_resource_group.main.location
+#  account_tier             = "Standard"
+#  account_replication_type = "LRS"
+#}
+#
+#resource "azurerm_role_assignment" "appservice_storage" {
+#  scope                = azurerm_storage_account.datatier.id
+#  role_definition_name = "Storage Blob Data Reader"
+#  principal_id         = azurerm_app_service.wwt.identity.0.principal_id
+#}
 
 resource "azurerm_key_vault" "wwt" {
   name                        = "${var.prefix}kv"
@@ -130,12 +139,6 @@ resource "azurerm_key_vault_access_policy" "appservicenet5" {
   tenant_id               = data.azurerm_client_config.current.tenant_id
   object_id               = azurerm_app_service.wwtnet5.identity.0.principal_id
   secret_permissions      = ["get", "list"]
-}
-
-resource "azurerm_role_assignment" "appservice_storage" {
-  scope                = azurerm_storage_account.datatier.id
-  role_definition_name = "Storage Blob Data Reader"
-  principal_id         = azurerm_app_service.wwt.identity.0.principal_id
 }
 
 resource "azurerm_key_vault_access_policy" "user" {
