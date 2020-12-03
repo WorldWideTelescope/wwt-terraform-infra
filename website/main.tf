@@ -39,6 +39,8 @@ resource "azurerm_key_vault" "wwt" {
 data "azurerm_client_config" "current" {
 }
 
+# Note: this plan is called just "wwt" but it is now specifically for the
+# Windows-based Communities service.
 resource "azurerm_app_service_plan" "wwt" {
   name                = "${var.prefix}-app-service-plan"
   location            = azurerm_resource_group.main.location
@@ -94,6 +96,8 @@ resource "azurerm_application_insights" "wwt" {
   application_type    = "web"
 }
 
+# Note: this service is called just "wwt" but it is now specifically for the
+# Windows-based Communities service.
 resource "azurerm_app_service" "wwt" {
   name                = "${var.prefix}-app-service"
   location            = azurerm_resource_group.main.location
@@ -145,6 +149,9 @@ resource "azurerm_app_service" "data" {
 }
 
 # Give the app services access to KeyVault via Managed Identity
+
+# Note: this policy is called just "appservice" but it is now specifically for
+# the Windows-based Communities service.
 resource "azurerm_key_vault_access_policy" "appservice" {
   key_vault_id            = azurerm_key_vault.wwt.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
