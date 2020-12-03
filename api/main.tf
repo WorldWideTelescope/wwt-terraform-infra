@@ -8,7 +8,7 @@ resource "azurerm_resource_group" "main" {
 }
 
 resource "azurerm_app_service_plan" "main" {
-  name                = "${var.prefix}-ctr-plan"
+  name                = "${var.prefix}-plan"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   kind                = "Linux"
@@ -21,7 +21,7 @@ resource "azurerm_app_service_plan" "main" {
 }
 
 resource "azurerm_app_service" "main" {
-  name                = "${var.prefix}-ctr-web"
+  name                = "${var.prefix}-app"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   app_service_plan_id = azurerm_app_service_plan.main.id
