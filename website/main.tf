@@ -50,6 +50,19 @@ resource "azurerm_app_service_plan" "wwt" {
   }
 }
 
+resource "azurerm_app_service_plan" "data" {
+  name                = "${var.prefix}-data-plan"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  kind                = "Linux"
+  reserved            = true
+
+  sku {
+    tier = "Standard"
+    size = "S1"
+  }
+}
+
 resource "azurerm_redis_cache" "wwt" {
   name                = "${var.prefix}-cache"
   location            = azurerm_resource_group.main.location
@@ -90,7 +103,7 @@ resource "azurerm_app_service" "wwt" {
   site_config {
     dotnet_framework_version = "v4.0"
   }
-  
+
   app_settings = {
     "UseAzurePlateFiles" = "true"
     "UseCaching" = "true"
@@ -105,20 +118,25 @@ resource "azurerm_app_service" "wwt" {
   }
 }
 
-
-resource "azurerm_app_service" "wwtnet5" {
-  name                = "${var.prefix}-net5-app-service"
+resource "azurerm_app_service" "data" {
+  name                = "${var.prefix}-data-app"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  app_service_plan_id = azurerm_app_service_plan.wwt.id
-  
+  app_service_plan_id = azurerm_app_service_plan.data.id
+
+  site_config {
+    app_command_line = ""
+    linux_fx_version = "DOCKER|aasworldwidetelescope/core-data:latest"
+  }
+
   app_settings = {
     "UseAzurePlateFiles" = "true"
     "UseCaching" = "true"
-    #"AzurePlateFileStorageAccount" = azurerm_storage_account.datatier.primary_blob_endpoint
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
     "KeyVaultName" = azurerm_key_vault.wwt.name
     "SlidingExpiration" = "30.00:00:00" # default to 30 days to keep cached items
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
+    "DOCKER_REGISTRY_SERVER_URL" = "https://index.docker.io"
   }
 
   identity {
@@ -134,10 +152,10 @@ resource "azurerm_key_vault_access_policy" "appservice" {
   secret_permissions      = ["get", "list"]
 }
 
-resource "azurerm_key_vault_access_policy" "appservicenet5" {
+resource "azurerm_key_vault_access_policy" "data_appservice" {
   key_vault_id            = azurerm_key_vault.wwt.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = azurerm_app_service.wwtnet5.identity.0.principal_id
+  object_id               = azurerm_app_service.data.identity.0.principal_id
   secret_permissions      = ["get", "list"]
 }
 
