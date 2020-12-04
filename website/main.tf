@@ -7,6 +7,13 @@ resource "azurerm_resource_group" "main" {
   location = var.location
 }
 
+# For the time being, you can't mix Windows and Linux App Service Plans
+# in the same resource group, so we need to use a second group:
+resource "azurerm_resource_group" "linux" {
+  name     = "${var.prefix}-linux-resources"
+  location = var.location
+}
+
 # Uncomment if using data tier tied to this script. This is *not*
 # the case for WWT production.
 #
@@ -54,8 +61,8 @@ resource "azurerm_app_service_plan" "wwt" {
 
 resource "azurerm_app_service_plan" "data" {
   name                = "${var.prefix}-data-plan"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.linux.location
+  resource_group_name = azurerm_resource_group.linux.name
   kind                = "Linux"
   reserved            = true
 
@@ -126,8 +133,8 @@ resource "azurerm_app_service" "wwt" {
 
 resource "azurerm_app_service" "data" {
   name                = "${var.prefix}-data-app"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.linux.location
+  resource_group_name = azurerm_resource_group.linux.name
   app_service_plan_id = azurerm_app_service_plan.data.id
 
   site_config {
