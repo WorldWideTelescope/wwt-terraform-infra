@@ -1,4 +1,6 @@
-# Resource descriptions for the core WWT web apps.
+# Resource descriptions for the core WWT web apps. Terrform docs:
+#
+# https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs
 
 provider "azurerm" {
   features {}
@@ -12,7 +14,7 @@ resource "azurerm_resource_group" "main" {
   location = var.location
 }
 
-# ... excapt that for the time being, you can't mix Windows and Linux App
+# ... except that for the time being, you can't mix Windows and Linux App
 # Service Plans in the same resource group, so we need to use a second group:
 resource "azurerm_resource_group" "linux" {
   name     = "${var.prefix}-linux-resources"
@@ -20,7 +22,8 @@ resource "azurerm_resource_group" "linux" {
 }
 
 # Uncomment if using data tier tied to this script. This is *not*
-# the case for WWT production.
+# the case for WWT production. The data tier should have a different lifecycle
+# than the apps (namely it should never ever go away!)
 #
 #resource "azurerm_storage_account" "datatier" {
 #  name                     = "${var.prefix}storage"
@@ -200,6 +203,71 @@ resource "azurerm_monitor_autoscale_setting" "data" {
   }
 }
 
+# The main Linux-based data app service.
+resource "azurerm_app_service" "data" {
+  name                = "${var.prefix}-data-app"
+  location            = azurerm_resource_group.linux.location
+  resource_group_name = azurerm_resource_group.linux.name
+  app_service_plan_id = azurerm_app_service_plan.data.id
+
+  site_config {
+    always_on = true
+    app_command_line = ""
+    linux_fx_version = "DOCKER|aasworldwidetelescope/core-data:latest"
+  }
+
+  app_settings = {
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
+    "DOCKER_REGISTRY_SERVER_URL" = "https://index.docker.io"
+    "KeyVaultName" = azurerm_key_vault.wwt.name
+    "SlidingExpiration" = "30.00:00:00" # default to 30 days to keep cached items
+    "UseAzurePlateFiles" = "true"
+    "UseCaching" = "true"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
+  }
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+# "stage" slot identical but not always_on. Note that most config/settings
+# swap when you swap deployment slots, so this slot and production must
+# be kept in sync. Fortunately the always_on setting stays put.
+resource "azurerm_app_service_slot" "data_stage" {
+  name                = "stage"
+  location            = azurerm_resource_group.linux.location
+  resource_group_name = azurerm_resource_group.linux.name
+  app_service_plan_id = azurerm_app_service_plan.data.id
+  app_service_name    = azurerm_app_service.data.name
+
+  site_config {
+    always_on = false
+    app_command_line = ""
+    linux_fx_version = "DOCKER|aasworldwidetelescope/core-data:latest"
+  }
+
+  app_settings = azurerm_app_service.data.app_settings
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+resource "azurerm_key_vault_access_policy" "data_appservice" {
+  key_vault_id            = azurerm_key_vault.wwt.id
+  tenant_id               = data.azurerm_client_config.current.tenant_id
+  object_id               = azurerm_app_service.data.identity.0.principal_id
+  secret_permissions      = ["get", "list"]
+}
+
+resource "azurerm_key_vault_access_policy" "data_stage_appservice" {
+  key_vault_id            = azurerm_key_vault.wwt.id
+  tenant_id               = data.azurerm_client_config.current.tenant_id
+  object_id               = azurerm_app_service_slot.data_stage.identity.0.principal_id
+  secret_permissions      = ["get", "list"]
+}
+
 # App service plan for the Windows-based app(s). At the moment this
 # is only the Communities functionality.
 #
@@ -214,40 +282,6 @@ resource "azurerm_app_service_plan" "wwt" {
     tier = "Standard"
     size = "S1"
   }
-}
-
-# The main Linux-based data app service.
-resource "azurerm_app_service" "data" {
-  name                = "${var.prefix}-data-app"
-  location            = azurerm_resource_group.linux.location
-  resource_group_name = azurerm_resource_group.linux.name
-  app_service_plan_id = azurerm_app_service_plan.data.id
-
-  site_config {
-    app_command_line = ""
-    linux_fx_version = "DOCKER|aasworldwidetelescope/core-data:latest"
-  }
-
-  app_settings = {
-    "UseAzurePlateFiles" = "true"
-    "UseCaching" = "true"
-    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
-    "KeyVaultName" = azurerm_key_vault.wwt.name
-    "SlidingExpiration" = "30.00:00:00" # default to 30 days to keep cached items
-    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
-    "DOCKER_REGISTRY_SERVER_URL" = "https://index.docker.io"
-  }
-
-  identity {
-    type = "SystemAssigned"
-  }
-}
-
-resource "azurerm_key_vault_access_policy" "data_appservice" {
-  key_vault_id            = azurerm_key_vault.wwt.id
-  tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = azurerm_app_service.data.identity.0.principal_id
-  secret_permissions      = ["get", "list"]
 }
 
 # The Windows-based Communities app service.
