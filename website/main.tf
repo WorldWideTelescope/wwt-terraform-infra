@@ -97,6 +97,7 @@ resource "azurerm_application_insights" "wwt" {
 
 # App service plan for the Linux-based apps. This includes the
 # core data services.
+
 resource "azurerm_app_service_plan" "data" {
   name                = "${var.prefix}-data-plan"
   location            = azurerm_resource_group.linux.location
@@ -107,6 +108,95 @@ resource "azurerm_app_service_plan" "data" {
   sku {
     tier = "Standard"
     size = "S1"
+  }
+}
+
+# TODO: possibly add mirror rules that look for under-utilization of CPU, etc.,
+# and scale down the app as needed.
+#
+# Also TODO: I don't have a good sense of what a good referene value for the
+# HTTP queue length is, thus far.
+#
+# For a list of app service plan metrics, see:
+#
+# https://docs.microsoft.com/en-us/azure/azure-monitor/platform/metrics-supported#microsoftwebserverfarms
+resource "azurerm_monitor_autoscale_setting" "data" {
+  name                = "${var.prefix}-data-autoscaling"
+  location            = azurerm_resource_group.linux.location
+  resource_group_name = azurerm_resource_group.linux.name
+  target_resource_id  = azurerm_app_service_plan.data.id
+
+  profile {
+    name = "defaultProfile"
+
+    capacity {
+      default = 2
+      minimum = 2
+      maximum = 10
+    }
+
+    # Scale up if average CPU pecentage is >=75% for 5 minutes or more
+    rule {
+      metric_trigger {
+        metric_name = "CpuPercentage"
+        metric_resource_id = azurerm_app_service_plan.data.id
+        statistic = "Average"
+        time_grain = "PT1M"
+        time_aggregation = "Average"
+        time_window = "PT5M"
+        operator = "GreaterThanOrEqual"
+        threshold = 75
+      }
+
+      scale_action {
+        direction = "Increase"
+        type      = "ChangeCount"
+        value     = "1"
+        cooldown  = "PT15M"
+      }
+    }
+
+    # Scale up if average memory pecentage is >=75% for 5 minutes or more
+    rule {
+      metric_trigger {
+        metric_name = "MemoryPercentage"
+        metric_resource_id = azurerm_app_service_plan.data.id
+        statistic = "Average"
+        time_grain = "PT1M"
+        time_aggregation = "Average"
+        time_window = "PT5M"
+        operator = "GreaterThanOrEqual"
+        threshold = 75
+      }
+
+      scale_action {
+        direction = "Increase"
+        type      = "ChangeCount"
+        value     = "1"
+        cooldown  = "PT15M"
+      }
+    }
+
+    # Scale up if average HTTP queue length is >10 for 5 minutes or more
+    rule {
+      metric_trigger {
+        metric_name = "HttpQueueLength"
+        metric_resource_id = azurerm_app_service_plan.data.id
+        statistic = "Average"
+        time_grain = "PT1M"
+        time_aggregation = "Average"
+        time_window = "PT5M"
+        operator = "GreaterThanOrEqual"
+        threshold = 10
+      }
+
+      scale_action {
+        direction = "Increase"
+        type      = "ChangeCount"
+        value     = "1"
+        cooldown  = "PT15M"
+      }
+    }
   }
 }
 
