@@ -301,12 +301,15 @@ resource "azurerm_app_service" "wwt" {
   }
 
   app_settings = {
-    "UseAzurePlateFiles" = "true"
-    "UseCaching" = "true"
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
     #"AzurePlateFileStorageAccount" = azurerm_storage_account.datatier.primary_blob_endpoint
     "KeyVaultName" = azurerm_key_vault.wwt.name
+    "LiveClientId" = var.liveClientId
+    "LiveClientRedirectUrlMap" = var.liveClientRedirectUrlMap
+    "LiveClientSecret" = var.liveClientSecret
     "SlidingExpiration" = "30.00:00:00" # default to 30 days to keep cached items
-    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
+    "UseAzurePlateFiles" = "true"
+    "UseCaching" = "true"
   }
 
   identity {
@@ -314,11 +317,38 @@ resource "azurerm_app_service" "wwt" {
   }
 }
 
+resource "azurerm_app_service_slot" "communities_stage" {
+  name                = "stage"
+  location            = azurerm_resource_group.main.location
+  resource_group_name = azurerm_resource_group.main.name
+  app_service_plan_id = azurerm_app_service_plan.wwt.id
+  app_service_name    = azurerm_app_service.wwt.name
+
+  site_config {
+    always_on = false
+    dotnet_framework_version = "v4.0"
+  }
+
+  app_settings = azurerm_app_service.wwt.app_settings
+
+  identity {
+    type = "SystemAssigned"
+  }
+}
+
+
 # Here, too, this policy is called just "appservice" but it is now specifically
 # for the Windows-based Communities service.
 resource "azurerm_key_vault_access_policy" "appservice" {
   key_vault_id            = azurerm_key_vault.wwt.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
   object_id               = azurerm_app_service.wwt.identity.0.principal_id
+  secret_permissions      = ["get", "list"]
+}
+
+resource "azurerm_key_vault_access_policy" "appservice_stage" {
+  key_vault_id            = azurerm_key_vault.wwt.id
+  tenant_id               = data.azurerm_client_config.current.tenant_id
+  object_id               = azurerm_app_service_slot.communities_stage.identity.0.principal_id
   secret_permissions      = ["get", "list"]
 }
