@@ -53,3 +53,13 @@ resource "azurerm_sql_server" "permanent_data_wwtcore_db_server" {
   administrator_login          = "wwtuser"
   administrator_login_password = var.wwtcoreDbAdminPassword
 }
+
+// The "communities" database server hosts the Layerscape database.
+resource "azurerm_sql_server" "permanent_data_communities_db_server" {
+  name                         = var.legacyNameCommunitiesDBServer
+  resource_group_name          = azurerm_resource_group.permanent_data.name
+  location                     = azurerm_resource_group.permanent_data.location
+  version                      = "12.0"
+  administrator_login          = "wwtprod"
+  administrator_login_password = var.communitiesDbAdminPassword
+}
