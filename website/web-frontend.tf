@@ -413,14 +413,6 @@ resource "azurerm_application_gateway" "frontend" {
     key_vault_secret_id = "https://wwtssl.vault.azure.net/secrets/worldwidetelescope-org/"
   }
 
-  redirect_configuration {
-    name                 = "anyhost-https-path-routing_test-redirection-2"
-    include_path         = false
-    include_query_string = false
-    redirect_type        = "Permanent"
-    target_url           = "https://www.worldwidetelescope.org/webclient/"
-  }
-
   lifecycle {
     prevent_destroy = true
   }
