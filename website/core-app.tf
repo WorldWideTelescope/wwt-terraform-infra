@@ -35,7 +35,7 @@ resource "azurerm_resource_group" "coreapp_linux" {
 
 # The Key Vault for secrets and app configuration.
 
-resource "azurerm_key_vault" "wwt" {
+resource "azurerm_key_vault" "coreapp" {
   name                        = "${var.oldPrefix}kv"
   resource_group_name         = azurerm_resource_group.coreapp.name
   location                    = azurerm_resource_group.coreapp.location
@@ -52,7 +52,7 @@ resource "azurerm_key_vault" "wwt" {
 }
 
 resource "azurerm_key_vault_access_policy" "user" {
-  key_vault_id            = azurerm_key_vault.wwt.id
+  key_vault_id            = azurerm_key_vault.coreapp.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
   object_id               = data.azurerm_client_config.current.object_id
   secret_permissions      = ["get", "set", "list"]
@@ -63,7 +63,7 @@ resource "azurerm_key_vault_access_policy" "user" {
 resource "azurerm_key_vault_secret" "communitystorage" {
   name         = "EarthOnlineStorage"
   value        = azurerm_storage_account.permanent_data_communities.primary_connection_string
-  key_vault_id = azurerm_key_vault.wwt.id
+  key_vault_id = azurerm_key_vault.coreapp.id
 
   tags = {
     "file-encoding" = "utf-8"
@@ -108,13 +108,13 @@ resource "azurerm_sql_database" "tours" {
 resource "azurerm_key_vault_secret" "layerscapedb" {
   name         = "EarthOnlineEntities"
   value        = "metadata=res://*/Models.EarthOnline.csdl|res://*/Models.EarthOnline.ssdl|res://*/Models.EarthOnline.msl;provider=System.Data.SqlClient;provider connection string=\"Data Source=${azurerm_sql_server.permanent_data_communities_db_server.fully_qualified_domain_name};Initial Catalog=${azurerm_sql_database.layerscape.name};Integrated Security=False;User ID=${azurerm_sql_server.permanent_data_communities_db_server.administrator_login};Password=${var.layerscapeDbPassword};multipleactiveresultsets=True;App=EntityFramework\""
-  key_vault_id = azurerm_key_vault.wwt.id
+  key_vault_id = azurerm_key_vault.coreapp.id
 }
 
 resource "azurerm_key_vault_secret" "toursdb" {
   name         = "WWTToursDBConnectionString"
   value        = "Server=tcp:${azurerm_sql_server.permanent_data_wwtcore_db_server.fully_qualified_domain_name},1433;Database=${azurerm_sql_database.tours.name};User ID=${azurerm_sql_server.permanent_data_wwtcore_db_server.administrator_login}@${azurerm_sql_server.permanent_data_wwtcore_db_server.name};Password=${var.wwttoursDbPassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;"
-  key_vault_id = azurerm_key_vault.wwt.id
+  key_vault_id = azurerm_key_vault.coreapp.id
 
   tags = {
     "file-encoding" = "utf-8"
@@ -140,7 +140,7 @@ resource "azurerm_redis_cache" "wwt" {
 resource "azurerm_key_vault_secret" "redis" {
   name         = "RedisConnectionString"
   value        = azurerm_redis_cache.wwt.primary_connection_string
-  key_vault_id = azurerm_key_vault.wwt.id
+  key_vault_id = azurerm_key_vault.coreapp.id
 
   tags = {
     environment = "Production"
@@ -277,7 +277,7 @@ resource "azurerm_app_service" "data" {
   app_settings = {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
     "DOCKER_REGISTRY_SERVER_URL" = "https://index.docker.io"
-    "KeyVaultName" = azurerm_key_vault.wwt.name
+    "KeyVaultName" = azurerm_key_vault.coreapp.name
     "SlidingExpiration" = "30.00:00:00" # default to 30 days to keep cached items
     "UseAzurePlateFiles" = "true"
     "UseCaching" = "true"
@@ -313,14 +313,14 @@ resource "azurerm_app_service_slot" "data_stage" {
 }
 
 resource "azurerm_key_vault_access_policy" "data_appservice" {
-  key_vault_id            = azurerm_key_vault.wwt.id
+  key_vault_id            = azurerm_key_vault.coreapp.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
   object_id               = azurerm_app_service.data.identity.0.principal_id
   secret_permissions      = ["get", "list"]
 }
 
 resource "azurerm_key_vault_access_policy" "data_stage_appservice" {
-  key_vault_id            = azurerm_key_vault.wwt.id
+  key_vault_id            = azurerm_key_vault.coreapp.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
   object_id               = azurerm_app_service_slot.data_stage.identity.0.principal_id
   secret_permissions      = ["get", "list"]
@@ -354,7 +354,7 @@ resource "azurerm_app_service" "communities" {
   app_settings = {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
     #"AzurePlateFileStorageAccount" = azurerm_storage_account.datatier.primary_blob_endpoint
-    "KeyVaultName" = azurerm_key_vault.wwt.name
+    "KeyVaultName" = azurerm_key_vault.coreapp.name
     "LiveClientId" = var.liveClientId
     "LiveClientRedirectUrlMap" = var.liveClientRedirectUrlMap
     "LiveClientSecret" = var.liveClientSecret
@@ -388,14 +388,14 @@ resource "azurerm_app_service_slot" "communities_stage" {
 }
 
 resource "azurerm_key_vault_access_policy" "communities_app" {
-  key_vault_id            = azurerm_key_vault.wwt.id
+  key_vault_id            = azurerm_key_vault.coreapp.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
   object_id               = azurerm_app_service.communities.identity.0.principal_id
   secret_permissions      = ["get", "list"]
 }
 
 resource "azurerm_key_vault_access_policy" "communities_app_stage" {
-  key_vault_id            = azurerm_key_vault.wwt.id
+  key_vault_id            = azurerm_key_vault.coreapp.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
   object_id               = azurerm_app_service_slot.communities_stage.identity.0.principal_id
   secret_permissions      = ["get", "list"]
