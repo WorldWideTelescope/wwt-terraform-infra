@@ -45,6 +45,10 @@ resource "azurerm_key_vault" "wwt" {
   purge_protection_enabled    = false
 
   sku_name = "standard"
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "azurerm_key_vault_access_policy" "user" {
@@ -52,6 +56,19 @@ resource "azurerm_key_vault_access_policy" "user" {
   tenant_id               = data.azurerm_client_config.current.tenant_id
   object_id               = data.azurerm_client_config.current.object_id
   secret_permissions      = ["get", "set", "list"]
+}
+
+# SQL databases powering some of the core app functionality.
+
+resource "azurerm_sql_database" "tours" {
+  name                = "WWTTours"
+  resource_group_name = azurerm_resource_group.permanent_data.name
+  location            = azurerm_resource_group.permanent_data.location
+  server_name         = azurerm_sql_server.permanent_data_wwtcore_db_server.name
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # The Redis cache layer.
