@@ -111,36 +111,35 @@ resource "azurerm_application_gateway" "frontend" {
   # Backend address pools
 
   backend_address_pool {
+    # Although this backend is no longer used, if you try to get rid of it,
+    # Terraform gets confused and wants to rewrite all of the other backends.
     name = "wwtappgw1-vm-backend"
-    fqdns = [
-      "10.0.0.4",
-      "10.0.0.5",
-    ]
+    fqdns = ["10.0.0.4", "10.0.0.5"]
   }
 
   backend_address_pool {
     name  = "wwtappgw1-proxy-backend"
-    fqdns = ["wwtproxy.azurewebsites.net"]
+    fqdns = [azurerm_app_service.core_proxy.default_site_hostname]
   }
 
   backend_address_pool {
     name  = "wwtappgw1-static-backend"
-    fqdns = ["wwtwebstatic.z22.web.core.windows.net"]
+    fqdns = [azurerm_storage_account.permanent_data_staticweb.primary_web_host]
   }
 
   backend_address_pool {
     name  = "wwtappgw1-nginx-core-prod-backend"
-    fqdns = ["wwtnginxcore-prod.azurewebsites.net"]
+    fqdns = [azurerm_app_service.core_nginx.default_site_hostname]
   }
 
   backend_address_pool {
     name  = "wwtappgw1-core-data-backend"
-    fqdns = ["wwtcoreapp-data-app.azurewebsites.net"]
+    fqdns = [azurerm_app_service.data.default_site_hostname]
   }
 
   backend_address_pool {
     name  = "wwtappgw1-core-mvc-backend"
-    fqdns = ["wwtcoreapp-app-service.azurewebsites.net"]
+    fqdns = [azurerm_app_service.communities.default_site_hostname]
   }
 
   # Backend HTTP settings
@@ -149,7 +148,7 @@ resource "azurerm_application_gateway" "frontend" {
     name                                = "webstatic-http-setting"
     affinity_cookie_name                = "ApplicationGatewayAffinity"
     cookie_based_affinity               = "Disabled"
-    host_name                           = "wwtwebstatic.z22.web.core.windows.net"
+    host_name                           = azurerm_storage_account.permanent_data_staticweb.primary_web_host
     port                                = 80
     protocol                            = "Http"
     request_timeout                     = 20
