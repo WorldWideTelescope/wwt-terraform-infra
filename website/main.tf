@@ -6,6 +6,17 @@ provider "azurerm" {
   features {}
 }
 
+# Store state in WWT's Azure blob storage:
+
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "devops-support"
+    storage_account_name = "wwtdevops"
+    container_name       = "terraform-state"
+    key                  = "prod.terraform.tfstate"
+  }
+}
+
 # Main resource group. For now, all of the resources in this file can sensibly
 # share the same lifecycle, so it makes sense to put them all into one big
 # resource group.
