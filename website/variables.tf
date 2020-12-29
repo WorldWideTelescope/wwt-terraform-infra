@@ -15,15 +15,19 @@ variable "oldPrefix" {
 // Names for "legacy" resources -- preexisting assets that we have imported into
 // Terraform.
 
-variable "legacyNameCommunities" {
+variable "legacyNameCommunitiesStorage" {
   description = "The name to use for the 'legacy' storage account equivalent to 'wwtcommunity' in production"
 }
 
-variable "legacyNameWwtweb" {
+variable "legacyNameWwtcoreDBServer" {
+  description = "The name to use for the 'legacy' database with AstroObjects and WWTTours"
+}
+
+variable "legacyNameWwtwebStorage" {
   description = "The name to use for the 'legacy' storage account equivalent to 'wwtweb' in production"
 }
 
-variable "legacyNameWwtwebstatic" {
+variable "legacyNameWwtwebstaticStorage" {
   description = "The name to use for the 'legacy' storage account equivalent to 'wwtwebstatic' in production"
 }
 
@@ -39,4 +43,8 @@ variable "liveClientRedirectUrlMap" {
 
 variable "liveClientSecret" {
   description = "The OAuth app secret"
+}
+
+variable "wwtcoreDbAdminPassword" {
+  description = "The password to the wwtcore database server admin account"
 }
