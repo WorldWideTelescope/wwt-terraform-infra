@@ -387,10 +387,7 @@ resource "azurerm_app_service_slot" "communities_stage" {
   }
 }
 
-
-# Here, too, this policy is called just "appservice" but it is now specifically
-# for the Windows-based Communities service.
-resource "azurerm_key_vault_access_policy" "appservice" {
+resource "azurerm_key_vault_access_policy" "communities_app" {
   key_vault_id            = azurerm_key_vault.wwt.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
   object_id               = azurerm_app_service.communities.identity.0.principal_id
