@@ -307,7 +307,6 @@ resource "azurerm_app_service" "wwt" {
 
   site_config {
     always_on = true
-    default_documents = ["hostingstart.html"]
     dotnet_framework_version = "v4.0"
   }
 
