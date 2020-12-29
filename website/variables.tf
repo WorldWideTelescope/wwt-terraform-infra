@@ -27,6 +27,10 @@ variable "legacyNameFrontendGroup" {
   description = "The name to use for the 'legacy' web frontend resource group"
 }
 
+variable "legacyNameProxyPlan" {
+  description = "The name to use for the 'legacy' proxy app service plan"
+}
+
 variable "legacyNameWwtcoreDBServer" {
   description = "The name to use for the 'legacy' SQL server with the AstroObjects and WWTTours databases"
 }
