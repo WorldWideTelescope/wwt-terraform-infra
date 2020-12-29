@@ -10,7 +10,7 @@ resource "azurerm_resource_group" "coreapp" {
 
 # ... except that for the time being, you can't mix Windows and Linux App
 # Service Plans in the same resource group, so we need to use a second group:
-resource "azurerm_resource_group" "linux" {
+resource "azurerm_resource_group" "coreapp_linux" {
   name     = "${var.oldPrefix}-linux-resources"
   location = var.location
 }
@@ -161,8 +161,8 @@ resource "azurerm_application_insights" "wwt" {
 
 resource "azurerm_app_service_plan" "data" {
   name                = "${var.oldPrefix}-data-plan"
-  location            = azurerm_resource_group.linux.location
-  resource_group_name = azurerm_resource_group.linux.name
+  location            = azurerm_resource_group.coreapp_linux.location
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
   kind                = "Linux"
   reserved            = true
 
@@ -183,8 +183,8 @@ resource "azurerm_app_service_plan" "data" {
 # https://docs.microsoft.com/en-us/azure/azure-monitor/platform/metrics-supported#microsoftwebserverfarms
 resource "azurerm_monitor_autoscale_setting" "data" {
   name                = "${var.oldPrefix}-data-autoscaling"
-  location            = azurerm_resource_group.linux.location
-  resource_group_name = azurerm_resource_group.linux.name
+  location            = azurerm_resource_group.coreapp_linux.location
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
   target_resource_id  = azurerm_app_service_plan.data.id
 
   profile {
@@ -264,8 +264,8 @@ resource "azurerm_monitor_autoscale_setting" "data" {
 # The main Linux-based data app service.
 resource "azurerm_app_service" "data" {
   name                = "${var.oldPrefix}-data-app"
-  location            = azurerm_resource_group.linux.location
-  resource_group_name = azurerm_resource_group.linux.name
+  location            = azurerm_resource_group.coreapp_linux.location
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
   app_service_plan_id = azurerm_app_service_plan.data.id
 
   site_config {
@@ -294,8 +294,8 @@ resource "azurerm_app_service" "data" {
 # be kept in sync. Fortunately the always_on setting stays put.
 resource "azurerm_app_service_slot" "data_stage" {
   name                = "stage"
-  location            = azurerm_resource_group.linux.location
-  resource_group_name = azurerm_resource_group.linux.name
+  location            = azurerm_resource_group.coreapp_linux.location
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
   app_service_plan_id = azurerm_app_service_plan.data.id
   app_service_name    = azurerm_app_service.data.name
 
