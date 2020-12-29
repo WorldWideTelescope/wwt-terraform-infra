@@ -4,6 +4,10 @@
 resource "azurerm_resource_group" "permanent_data" {
   name     = "permanent-data"
   location = var.location
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 // The "wwtweb" storage account hosts miscellaneous data files, including the
@@ -15,6 +19,10 @@ resource "azurerm_storage_account" "permanent_data_wwtweb" {
   account_tier              = "Standard"
   account_replication_type  = "GRS"
   enable_https_traffic_only = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 // The "communities" storage account hosts data associated with the Communities
@@ -26,6 +34,10 @@ resource "azurerm_storage_account" "permanent_data_communities" {
   account_tier              = "Standard"
   account_replication_type  = "LRS"
   enable_https_traffic_only = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 // The "wwtwebstatic" storage account has static web service enabled (in the $web container)
@@ -42,6 +54,10 @@ resource "azurerm_storage_account" "permanent_data_staticweb" {
     error_404_document = "404.html"
     index_document     = "index.html"
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 // The "wwtcore" database server hosts the AstroObjects and WWTTours databases.
@@ -52,6 +68,10 @@ resource "azurerm_sql_server" "permanent_data_wwtcore_db_server" {
   version                      = "12.0"
   administrator_login          = "wwtuser"
   administrator_login_password = var.wwtcoreDbAdminPassword
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 // The "communities" database server hosts the Layerscape database.
@@ -62,4 +82,8 @@ resource "azurerm_sql_server" "permanent_data_communities_db_server" {
   version                      = "12.0"
   administrator_login          = "wwtprod"
   administrator_login_password = var.communitiesDbAdminPassword
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
