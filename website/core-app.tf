@@ -394,7 +394,7 @@ resource "azurerm_key_vault_access_policy" "communities_app" {
   secret_permissions      = ["get", "list"]
 }
 
-resource "azurerm_key_vault_access_policy" "appservice_stage" {
+resource "azurerm_key_vault_access_policy" "communities_app_stage" {
   key_vault_id            = azurerm_key_vault.wwt.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
   object_id               = azurerm_app_service_slot.communities_stage.identity.0.principal_id
