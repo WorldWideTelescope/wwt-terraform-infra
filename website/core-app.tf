@@ -30,7 +30,7 @@ resource "azurerm_resource_group" "linux" {
 #resource "azurerm_role_assignment" "appservice_storage" {
 #  scope                = azurerm_storage_account.datatier.id
 #  role_definition_name = "Storage Blob Data Reader"
-#  principal_id         = azurerm_app_service.wwt.identity.0.principal_id
+#  principal_id         = azurerm_app_service.communities.identity.0.principal_id
 #}
 
 # The Key Vault for secrets and app configuration.
@@ -340,10 +340,7 @@ resource "azurerm_app_service_plan" "communities" {
 }
 
 # The Windows-based Communities app service.
-#
-# Note: for historical reasons, this plan is called just "wwt", but
-# it is now not as globally relevant as that name would suggest.
-resource "azurerm_app_service" "wwt" {
+resource "azurerm_app_service" "communities" {
   name                = "${var.oldPrefix}-app-service"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
@@ -376,14 +373,14 @@ resource "azurerm_app_service_slot" "communities_stage" {
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   app_service_plan_id = azurerm_app_service_plan.communities.id
-  app_service_name    = azurerm_app_service.wwt.name
+  app_service_name    = azurerm_app_service.communities.name
 
   site_config {
     always_on = false
     dotnet_framework_version = "v4.0"
   }
 
-  app_settings = azurerm_app_service.wwt.app_settings
+  app_settings = azurerm_app_service.communities.app_settings
 
   identity {
     type = "SystemAssigned"
@@ -396,7 +393,7 @@ resource "azurerm_app_service_slot" "communities_stage" {
 resource "azurerm_key_vault_access_policy" "appservice" {
   key_vault_id            = azurerm_key_vault.wwt.id
   tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = azurerm_app_service.wwt.identity.0.principal_id
+  object_id               = azurerm_app_service.communities.identity.0.principal_id
   secret_permissions      = ["get", "list"]
 }
 
