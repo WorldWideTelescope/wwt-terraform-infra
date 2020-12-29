@@ -355,6 +355,38 @@ resource "azurerm_app_service" "core_proxy" {
   }
 }
 
+# App service and legacy plan for the core+misc nginx server. This mostly
+# handles traffic to random worldwidetelescope.org URLs, but also handles some
+# miscellaneous web traffic. This should be moved to a shared Linux app service
+# plan, but due to restrictions on what moves are allowed, we can't do that
+# until we teach Terraform about the whole setup.
+
+resource "azurerm_app_service_plan" "core_nginx" {
+  name                = var.legacyNameNginxPlan
+  location            = azurerm_resource_group.coreapp_linux.location
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
+  kind                = "Linux"
+  reserved            = true
+
+  sku {
+    tier = "Basic"
+    size = "B1"
+  }
+}
+
+resource "azurerm_app_service" "core_nginx" {
+  name                = var.legacyNameNginxApp
+  location            = azurerm_resource_group.web_frontend_legacy.location
+  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
+  app_service_plan_id = azurerm_app_service_plan.core_nginx.id
+
+  site_config {
+    always_on = false
+    app_command_line = ""
+    linux_fx_version = "DOCKER|aasworldwidetelescope/nginx-core:latest"
+  }
+}
+
 # App service plan for the Windows-based app(s). At the moment this
 # is only the Communities functionality.
 resource "azurerm_app_service_plan" "communities" {

@@ -27,6 +27,14 @@ variable "legacyNameFrontendGroup" {
   description = "The name to use for the 'legacy' web frontend resource group"
 }
 
+variable "legacyNameNginxApp" {
+  description = "The 'legacy name' of the core nginx app service"
+}
+
+variable "legacyNameNginxPlan" {
+  description = "The name to use for the 'legacy' nginx app service plan"
+}
+
 variable "legacyNameProxyApp" {
   description = "The name to use for the 'legacy' proxy app service"
 }
