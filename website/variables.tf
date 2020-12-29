@@ -11,6 +11,10 @@ variable "location" {
 // Names for "legacy" resources -- preexisting assets that we have imported into
 // Terraform.
 
+variable "legacyNameCommunities" {
+  description = "The name to use for the 'legacy' storage account equivalent to 'wwtcommunity' in production"
+}
+
 variable "legacyNameWwtweb" {
   description = "The name to use for the 'legacy' storage account equivalent to 'wwtweb' in production"
 }
