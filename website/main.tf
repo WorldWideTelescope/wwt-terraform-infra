@@ -21,14 +21,14 @@ terraform {
 # share the same lifecycle, so it makes sense to put them all into one big
 # resource group.
 resource "azurerm_resource_group" "main" {
-  name     = "${var.prefix}-resources"
+  name     = "${var.oldPrefix}-resources"
   location = var.location
 }
 
 # ... except that for the time being, you can't mix Windows and Linux App
 # Service Plans in the same resource group, so we need to use a second group:
 resource "azurerm_resource_group" "linux" {
-  name     = "${var.prefix}-linux-resources"
+  name     = "${var.oldPrefix}-linux-resources"
   location = var.location
 }
 
@@ -53,7 +53,7 @@ resource "azurerm_resource_group" "linux" {
 # The Key Vault for secrets and app configuration.
 
 resource "azurerm_key_vault" "wwt" {
-  name                        = "${var.prefix}kv"
+  name                        = "${var.oldPrefix}kv"
   resource_group_name         = azurerm_resource_group.main.name
   location                    = azurerm_resource_group.main.location
   enabled_for_disk_encryption = true
@@ -77,7 +77,7 @@ resource "azurerm_key_vault_access_policy" "user" {
 # The Redis cache layer.
 
 resource "azurerm_redis_cache" "wwt" {
-  name                = "${var.prefix}-cache"
+  name                = "${var.oldPrefix}-cache"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   capacity            = 2
@@ -103,7 +103,7 @@ resource "azurerm_key_vault_secret" "redis" {
 # The Application Insights APM layer.
 
 resource "azurerm_application_insights" "wwt" {
-  name                = "${var.prefix}insights"
+  name                = "${var.oldPrefix}insights"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   application_type    = "web"
@@ -113,7 +113,7 @@ resource "azurerm_application_insights" "wwt" {
 # core data services.
 
 resource "azurerm_app_service_plan" "data" {
-  name                = "${var.prefix}-data-plan"
+  name                = "${var.oldPrefix}-data-plan"
   location            = azurerm_resource_group.linux.location
   resource_group_name = azurerm_resource_group.linux.name
   kind                = "Linux"
@@ -135,7 +135,7 @@ resource "azurerm_app_service_plan" "data" {
 #
 # https://docs.microsoft.com/en-us/azure/azure-monitor/platform/metrics-supported#microsoftwebserverfarms
 resource "azurerm_monitor_autoscale_setting" "data" {
-  name                = "${var.prefix}-data-autoscaling"
+  name                = "${var.oldPrefix}-data-autoscaling"
   location            = azurerm_resource_group.linux.location
   resource_group_name = azurerm_resource_group.linux.name
   target_resource_id  = azurerm_app_service_plan.data.id
@@ -216,7 +216,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
 
 # The main Linux-based data app service.
 resource "azurerm_app_service" "data" {
-  name                = "${var.prefix}-data-app"
+  name                = "${var.oldPrefix}-data-app"
   location            = azurerm_resource_group.linux.location
   resource_group_name = azurerm_resource_group.linux.name
   app_service_plan_id = azurerm_app_service_plan.data.id
@@ -285,7 +285,7 @@ resource "azurerm_key_vault_access_policy" "data_stage_appservice" {
 # Note: for historical reasons, this plan is called just "wwt", but
 # it is now not as globally relevant as that name would suggest.
 resource "azurerm_app_service_plan" "wwt" {
-  name                = "${var.prefix}-app-service-plan"
+  name                = "${var.oldPrefix}-app-service-plan"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
 
@@ -300,7 +300,7 @@ resource "azurerm_app_service_plan" "wwt" {
 # Note: for historical reasons, this plan is called just "wwt", but
 # it is now not as globally relevant as that name would suggest.
 resource "azurerm_app_service" "wwt" {
-  name                = "${var.prefix}-app-service"
+  name                = "${var.oldPrefix}-app-service"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   app_service_plan_id = azurerm_app_service_plan.wwt.id

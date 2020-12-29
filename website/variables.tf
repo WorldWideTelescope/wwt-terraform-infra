@@ -8,6 +8,10 @@ variable "location" {
   description = "The location where resources will be created"
 }
 
+variable "oldPrefix" {
+  description = "A different, inferior public resource prefix label used to set up the production system"
+}
+
 // Names for "legacy" resources -- preexisting assets that we have imported into
 // Terraform.
 
