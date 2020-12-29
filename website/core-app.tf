@@ -328,10 +328,7 @@ resource "azurerm_key_vault_access_policy" "data_stage_appservice" {
 
 # App service plan for the Windows-based app(s). At the moment this
 # is only the Communities functionality.
-#
-# Note: for historical reasons, this plan is called just "wwt", but
-# it is now not as globally relevant as that name would suggest.
-resource "azurerm_app_service_plan" "wwt" {
+resource "azurerm_app_service_plan" "communities" {
   name                = "${var.oldPrefix}-app-service-plan"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
@@ -350,7 +347,7 @@ resource "azurerm_app_service" "wwt" {
   name                = "${var.oldPrefix}-app-service"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  app_service_plan_id = azurerm_app_service_plan.wwt.id
+  app_service_plan_id = azurerm_app_service_plan.communities.id
 
   site_config {
     always_on = true
@@ -378,7 +375,7 @@ resource "azurerm_app_service_slot" "communities_stage" {
   name                = "stage"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  app_service_plan_id = azurerm_app_service_plan.wwt.id
+  app_service_plan_id = azurerm_app_service_plan.communities.id
   app_service_name    = azurerm_app_service.wwt.name
 
   site_config {
