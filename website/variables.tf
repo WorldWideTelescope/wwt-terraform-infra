@@ -35,14 +35,6 @@ variable "legacyNameNginxPlan" {
   description = "The name to use for the 'legacy' nginx app service plan"
 }
 
-variable "legacyNameProxyApp" {
-  description = "The name to use for the 'legacy' proxy app service"
-}
-
-variable "legacyNameProxyPlan" {
-  description = "The name to use for the 'legacy' proxy app service plan"
-}
-
 variable "legacyNameWwtcoreDBServer" {
   description = "The name to use for the 'legacy' SQL server with the AstroObjects and WWTTours databases"
 }

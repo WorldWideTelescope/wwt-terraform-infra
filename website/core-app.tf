@@ -326,32 +326,24 @@ resource "azurerm_key_vault_access_policy" "data_stage_appservice" {
   secret_permissions      = ["get", "list"]
 }
 
-# Legacy app service and plan for the Linux proxy service. This used to be
-# implemented in the core apps.
-
-resource "azurerm_app_service_plan" "core_proxy" {
-  name                = var.legacyNameProxyPlan
-  location            = azurerm_resource_group.web_frontend_legacy.location
-  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
-  kind                = "Linux"
-  reserved            = true
-
-  sku {
-    tier = "Basic"
-    size = "B1"
-  }
-}
+# Separate Linux-based proxy service. This used to be implemented in the core
+# apps. It's essentially standalone, but does get mixed into the /wwtweb/ URL
+# hierarchy.
 
 resource "azurerm_app_service" "core_proxy" {
-  name                = var.legacyNameProxyApp
-  location            = azurerm_resource_group.web_frontend_legacy.location
-  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
-  app_service_plan_id = azurerm_app_service_plan.core_proxy.id
+  name                = "${var.prefix}-coreproxy"
+  location            = azurerm_resource_group.coreapp_linux.location
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
+  app_service_plan_id = azurerm_app_service_plan.data.id
 
   site_config {
     always_on = false
     app_command_line = ""
     linux_fx_version = "DOCKER|aasworldwidetelescope/proxy:latest"
+  }
+
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
