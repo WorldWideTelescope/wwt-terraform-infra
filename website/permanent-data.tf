@@ -27,3 +27,19 @@ resource "azurerm_storage_account" "permanent_data_communities" {
   account_replication_type  = "LRS"
   enable_https_traffic_only = false
 }
+
+// The "wwtwebstatic" storage account has static web service enabled (in the $web container)
+// and hosts core static-web resources like documentation and the engine Javascript.
+resource "azurerm_storage_account" "permanent_data_staticweb" {
+  name                      = var.legacyNameWwtwebstatic
+  resource_group_name       = azurerm_resource_group.permanent_data.name
+  location                  = azurerm_resource_group.permanent_data.location
+  account_tier              = "Standard"
+  account_replication_type  = "RAGRS"
+  enable_https_traffic_only = false
+
+  static_website {
+    error_404_document = "404.html"
+    index_document     = "index.html"
+  }
+}

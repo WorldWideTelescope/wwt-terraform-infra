@@ -19,6 +19,10 @@ variable "legacyNameWwtweb" {
   description = "The name to use for the 'legacy' storage account equivalent to 'wwtweb' in production"
 }
 
+variable "legacyNameWwtwebstatic" {
+  description = "The name to use for the 'legacy' storage account equivalent to 'wwtwebstatic' in production"
+}
+
 // Other configuration.
 
 variable "liveClientId" {
