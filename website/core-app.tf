@@ -60,6 +60,17 @@ resource "azurerm_key_vault_access_policy" "user" {
 
 # SQL databases powering some of the core app functionality.
 
+resource "azurerm_sql_database" "astro_objects" {
+  name                = "AstroObjects"
+  resource_group_name = azurerm_resource_group.permanent_data.name
+  location            = azurerm_resource_group.permanent_data.location
+  server_name         = azurerm_sql_server.permanent_data_wwtcore_db_server.name
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 resource "azurerm_sql_database" "tours" {
   name                = "WWTTours"
   resource_group_name = azurerm_resource_group.permanent_data.name
