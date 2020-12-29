@@ -342,6 +342,19 @@ resource "azurerm_app_service_plan" "core_proxy" {
   }
 }
 
+resource "azurerm_app_service" "core_proxy" {
+  name                = var.legacyNameProxyApp
+  location            = azurerm_resource_group.web_frontend_legacy.location
+  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
+  app_service_plan_id = azurerm_app_service_plan.core_proxy.id
+
+  site_config {
+    always_on = false
+    app_command_line = ""
+    linux_fx_version = "DOCKER|aasworldwidetelescope/proxy:latest"
+  }
+}
+
 # App service plan for the Windows-based app(s). At the moment this
 # is only the Communities functionality.
 resource "azurerm_app_service_plan" "communities" {
