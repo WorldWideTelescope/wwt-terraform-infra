@@ -58,6 +58,18 @@ resource "azurerm_key_vault_access_policy" "user" {
   secret_permissions      = ["get", "set", "list"]
 }
 
+# Keyvault secrets connecting the apps to the permanent data accounts
+
+resource "azurerm_key_vault_secret" "communitystorage" {
+  name         = "EarthOnlineStorage"
+  value        = azurerm_storage_account.permanent_data_communities.primary_connection_string
+  key_vault_id = azurerm_key_vault.wwt.id
+
+  tags = {
+    "file-encoding" = "utf-8"
+  }
+}
+
 # SQL databases powering some of the core app functionality.
 
 resource "azurerm_sql_database" "astro_objects" {
@@ -91,6 +103,12 @@ resource "azurerm_sql_database" "tours" {
   lifecycle {
     prevent_destroy = true
   }
+}
+
+resource "azurerm_key_vault_secret" "layerscapedb" {
+  name         = "EarthOnlineEntities"
+  value        = "metadata=res://*/Models.EarthOnline.csdl|res://*/Models.EarthOnline.ssdl|res://*/Models.EarthOnline.msl;provider=System.Data.SqlClient;provider connection string=\"Data Source=${azurerm_sql_server.permanent_data_communities_db_server.fully_qualified_domain_name};Initial Catalog=${azurerm_sql_database.layerscape.name};Integrated Security=False;User ID=${azurerm_sql_server.permanent_data_communities_db_server.administrator_login};Password=${var.layerscapeDbPassword};multipleactiveresultsets=True;App=EntityFramework\""
+  key_vault_id = azurerm_key_vault.wwt.id
 }
 
 resource "azurerm_key_vault_secret" "toursdb" {
