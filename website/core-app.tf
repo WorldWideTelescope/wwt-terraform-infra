@@ -3,7 +3,7 @@
 # Main resource group. For now, all of the resources in this file can sensibly
 # share the same lifecycle, so it makes sense to put them all into one big
 # resource group.
-resource "azurerm_resource_group" "main" {
+resource "azurerm_resource_group" "coreapp" {
   name     = "${var.oldPrefix}-resources"
   location = var.location
 }
@@ -21,8 +21,8 @@ resource "azurerm_resource_group" "linux" {
 #
 #resource "azurerm_storage_account" "datatier" {
 #  name                     = "${var.prefix}storage"
-#  resource_group_name      = azurerm_resource_group.main.name
-#  location                 = azurerm_resource_group.main.location
+#  resource_group_name      = azurerm_resource_group.coreapp.name
+#  location                 = azurerm_resource_group.coreapp.location
 #  account_tier             = "Standard"
 #  account_replication_type = "LRS"
 #}
@@ -37,8 +37,8 @@ resource "azurerm_resource_group" "linux" {
 
 resource "azurerm_key_vault" "wwt" {
   name                        = "${var.oldPrefix}kv"
-  resource_group_name         = azurerm_resource_group.main.name
-  location                    = azurerm_resource_group.main.location
+  resource_group_name         = azurerm_resource_group.coreapp.name
+  location                    = azurerm_resource_group.coreapp.location
   enabled_for_disk_encryption = true
   tenant_id                   = data.azurerm_client_config.current.tenant_id
   soft_delete_enabled         = true
@@ -125,8 +125,8 @@ resource "azurerm_key_vault_secret" "toursdb" {
 
 resource "azurerm_redis_cache" "wwt" {
   name                = "${var.oldPrefix}-cache"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.coreapp.location
+  resource_group_name = azurerm_resource_group.coreapp.name
   capacity            = 2
   family              = "C"
   sku_name            = "Basic"
@@ -151,8 +151,8 @@ resource "azurerm_key_vault_secret" "redis" {
 
 resource "azurerm_application_insights" "wwt" {
   name                = "${var.oldPrefix}insights"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.coreapp.location
+  resource_group_name = azurerm_resource_group.coreapp.name
   application_type    = "web"
 }
 
@@ -330,8 +330,8 @@ resource "azurerm_key_vault_access_policy" "data_stage_appservice" {
 # is only the Communities functionality.
 resource "azurerm_app_service_plan" "communities" {
   name                = "${var.oldPrefix}-app-service-plan"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.coreapp.location
+  resource_group_name = azurerm_resource_group.coreapp.name
 
   sku {
     tier = "Standard"
@@ -342,8 +342,8 @@ resource "azurerm_app_service_plan" "communities" {
 # The Windows-based Communities app service.
 resource "azurerm_app_service" "communities" {
   name                = "${var.oldPrefix}-app-service"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.coreapp.location
+  resource_group_name = azurerm_resource_group.coreapp.name
   app_service_plan_id = azurerm_app_service_plan.communities.id
 
   site_config {
@@ -370,8 +370,8 @@ resource "azurerm_app_service" "communities" {
 
 resource "azurerm_app_service_slot" "communities_stage" {
   name                = "stage"
-  location            = azurerm_resource_group.main.location
-  resource_group_name = azurerm_resource_group.main.name
+  location            = azurerm_resource_group.coreapp.location
+  resource_group_name = azurerm_resource_group.coreapp.name
   app_service_plan_id = azurerm_app_service_plan.communities.id
   app_service_name    = azurerm_app_service.communities.name
 
