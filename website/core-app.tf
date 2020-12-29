@@ -93,6 +93,16 @@ resource "azurerm_sql_database" "tours" {
   }
 }
 
+resource "azurerm_key_vault_secret" "toursdb" {
+  name         = "WWTToursDBConnectionString"
+  value        = "Server=tcp:${azurerm_sql_server.permanent_data_wwtcore_db_server.fully_qualified_domain_name},1433;Database=${azurerm_sql_database.tours.name};User ID=${azurerm_sql_server.permanent_data_wwtcore_db_server.administrator_login}@${azurerm_sql_server.permanent_data_wwtcore_db_server.name};Password=${var.wwttoursDbPassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;"
+  key_vault_id = azurerm_key_vault.wwt.id
+
+  tags = {
+    "file-encoding" = "utf-8"
+  }
+}
+
 # The Redis cache layer.
 
 resource "azurerm_redis_cache" "wwt" {

@@ -56,3 +56,7 @@ variable "communitiesDbAdminPassword" {
 variable "wwtcoreDbAdminPassword" {
   description = "The password to the wwtcore database server admin account"
 }
+
+variable "wwttoursDbPassword" {
+  description = "The password to the WWTTours database user account"
+}
