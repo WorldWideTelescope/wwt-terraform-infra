@@ -63,7 +63,9 @@ resource "azurerm_application_gateway" "frontend" {
 
   identity {
     type = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.gateway.id]
+    # There seems to be a capitalization inconsistency here that doesn't go away
+    # with a `terraform apply`.
+    identity_ids = [replace(azurerm_user_assigned_identity.gateway.id, "resourceGroups", "resourcegroups")]
   }
 
   autoscale_configuration {
