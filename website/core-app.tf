@@ -71,6 +71,17 @@ resource "azurerm_sql_database" "astro_objects" {
   }
 }
 
+resource "azurerm_sql_database" "layerscape" {
+  name                = "Layerscape"
+  resource_group_name = azurerm_resource_group.permanent_data.name
+  location            = azurerm_resource_group.permanent_data.location
+  server_name         = azurerm_sql_server.permanent_data_communities_db_server.name
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 resource "azurerm_sql_database" "tours" {
   name                = "WWTTours"
   resource_group_name = azurerm_resource_group.permanent_data.name
