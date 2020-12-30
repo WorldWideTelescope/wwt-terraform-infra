@@ -379,6 +379,38 @@ resource "azurerm_app_service" "core_nginx" {
   }
 }
 
+resource "azurerm_app_service_custom_hostname_binding" "core_nginx_binder_wwtforum_org" {
+  hostname            = "binder.wwt-forum.org"
+  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
+  app_service_name    = azurerm_app_service.core_nginx.name
+  ssl_state           = "SniEnabled"
+  thumbprint          = "66E4F048C7AECB1EA9D29FBAFC13B8F6DA533C1B"
+}
+
+resource "azurerm_app_service_custom_hostname_binding" "core_nginx_forum_wwto" {
+  hostname            = "forum.worldwidetelescope.org"
+  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
+  app_service_name    = azurerm_app_service.core_nginx.name
+  ssl_state           = "SniEnabled"
+  thumbprint          = "F74A65EB92B647FC6B4A78D307E6258B3E9EA48C"
+}
+
+resource "azurerm_app_service_custom_hostname_binding" "core_nginx_forums_wwto" {
+  hostname            = "forums.worldwidetelescope.org"
+  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
+  app_service_name    = azurerm_app_service.core_nginx.name
+  ssl_state           = "SniEnabled"
+  thumbprint          = "F74A65EB92B647FC6B4A78D307E6258B3E9EA48C"
+}
+
+resource "azurerm_app_service_custom_hostname_binding" "core_nginx_wwtassets_org" {
+  hostname            = "wwtassets.org"
+  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
+  app_service_name    = azurerm_app_service.core_nginx.name
+  ssl_state           = "SniEnabled"
+  thumbprint          = "2F87FDD15EAFF87863273DE50BCEBBA090B4374A"
+}
+
 # App service plan for the Windows-based app(s). At the moment this
 # is only the Communities functionality.
 resource "azurerm_app_service_plan" "communities" {
