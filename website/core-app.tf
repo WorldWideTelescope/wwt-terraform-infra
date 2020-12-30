@@ -347,30 +347,19 @@ resource "azurerm_app_service" "core_proxy" {
   }
 }
 
-# App service and legacy plan for the core+misc nginx server. This mostly
-# handles traffic to random worldwidetelescope.org URLs, but also handles some
-# miscellaneous web traffic. This should be moved to a shared Linux app service
-# plan, but due to restrictions on what moves are allowed, we can't do that
-# until we teach Terraform about the whole setup.
-
-resource "azurerm_app_service_plan" "core_nginx" {
-  name                = var.legacyNameNginxPlan
-  location            = azurerm_resource_group.coreapp_linux.location
-  resource_group_name = azurerm_resource_group.coreapp_linux.name
-  kind                = "Linux"
-  reserved            = true
-
-  sku {
-    tier = "Basic"
-    size = "B1"
-  }
-}
+# App service for the core+misc nginx server. This mostly handles traffic to
+# random worldwidetelescope.org URLs, but also handles some miscellaneous web
+# traffic. The setup for those custom domains turns out to be quite tedious!
 
 resource "azurerm_app_service" "core_nginx" {
-  name                = var.legacyNameNginxApp
-  location            = azurerm_resource_group.web_frontend_legacy.location
-  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
-  app_service_plan_id = azurerm_app_service_plan.core_nginx.id
+  name                = "${var.prefix}-corenginx"
+  location            = azurerm_resource_group.coreapp_linux.location
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
+  app_service_plan_id = azurerm_app_service_plan.data.id
+
+  app_settings = {
+    "PUBLIC_FACING_DOMAIN_NAME" = "worldwidetelescope.org"
+  }
 
   site_config {
     always_on = false
@@ -381,34 +370,81 @@ resource "azurerm_app_service" "core_nginx" {
 
 resource "azurerm_app_service_custom_hostname_binding" "core_nginx_binder_wwtforum_org" {
   hostname            = "binder.wwt-forum.org"
-  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
   app_service_name    = azurerm_app_service.core_nginx.name
+
+  # These are managed through the cert binding:
+  lifecycle {
+    ignore_changes = [ssl_state, thumbprint]
+  }
+}
+
+resource "azurerm_app_service_managed_certificate" "core_nginx_binder_wwtforum_org" {
+  custom_hostname_binding_id = azurerm_app_service_custom_hostname_binding.core_nginx_binder_wwtforum_org.id
+}
+
+resource "azurerm_app_service_certificate_binding" "core_nginx_binder_wwtforum_org" {
+  hostname_binding_id = azurerm_app_service_custom_hostname_binding.core_nginx_binder_wwtforum_org.id
+  certificate_id      = azurerm_app_service_managed_certificate.core_nginx_binder_wwtforum_org.id
   ssl_state           = "SniEnabled"
-  thumbprint          = "66E4F048C7AECB1EA9D29FBAFC13B8F6DA533C1B"
 }
 
 resource "azurerm_app_service_custom_hostname_binding" "core_nginx_forum_wwto" {
   hostname            = "forum.worldwidetelescope.org"
-  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
   app_service_name    = azurerm_app_service.core_nginx.name
+
+  lifecycle {
+    ignore_changes = [ssl_state, thumbprint]
+  }
+}
+
+resource "azurerm_app_service_managed_certificate" "core_nginx_forum_wwto" {
+  custom_hostname_binding_id = azurerm_app_service_custom_hostname_binding.core_nginx_forum_wwto.id
+}
+
+resource "azurerm_app_service_certificate_binding" "core_nginx_forum_wwto" {
+  hostname_binding_id = azurerm_app_service_custom_hostname_binding.core_nginx_forum_wwto.id
+  certificate_id      = azurerm_app_service_managed_certificate.core_nginx_forum_wwto.id
   ssl_state           = "SniEnabled"
-  thumbprint          = "F74A65EB92B647FC6B4A78D307E6258B3E9EA48C"
 }
 
 resource "azurerm_app_service_custom_hostname_binding" "core_nginx_forums_wwto" {
   hostname            = "forums.worldwidetelescope.org"
-  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
   app_service_name    = azurerm_app_service.core_nginx.name
-  ssl_state           = "SniEnabled"
-  thumbprint          = "F74A65EB92B647FC6B4A78D307E6258B3E9EA48C"
+
+  lifecycle {
+    ignore_changes = [ssl_state, thumbprint]
+  }
 }
 
+resource "azurerm_app_service_managed_certificate" "core_nginx_forums_wwto" {
+  custom_hostname_binding_id = azurerm_app_service_custom_hostname_binding.core_nginx_forums_wwto.id
+}
+
+resource "azurerm_app_service_certificate_binding" "core_nginx_forums_wwto" {
+  hostname_binding_id = azurerm_app_service_custom_hostname_binding.core_nginx_forums_wwto.id
+  certificate_id      = azurerm_app_service_managed_certificate.core_nginx_forums_wwto.id
+  ssl_state           = "SniEnabled"
+}
+
+# TODO/FIXME: managed certs can't be used for root domains, so we have this set
+# up to get a cert from our LetsEncrypt keyvault setup. However, Terraform seems
+# to have issues with a keyvault-based custom cert setup here --
+# `azurerm_app_service_certificate.key_vault_secret_id` exists but Terraform
+# won't parse a reference to the generic secret, and `az webapp config ssl show`
+# reports a different data structure. So for now we skip automated SSL
+# configuration for this particular utility domain. I've got it set up through
+# the Portal UI manually.
 resource "azurerm_app_service_custom_hostname_binding" "core_nginx_wwtassets_org" {
   hostname            = "wwtassets.org"
-  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
   app_service_name    = azurerm_app_service.core_nginx.name
-  ssl_state           = "SniEnabled"
-  thumbprint          = "2F87FDD15EAFF87863273DE50BCEBBA090B4374A"
+
+  lifecycle {
+    ignore_changes = [ssl_state, thumbprint]
+  }
 }
 
 # App service plan for the Windows-based app(s). At the moment this
