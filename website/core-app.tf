@@ -70,6 +70,12 @@ resource "azurerm_key_vault_secret" "communitystorage" {
   }
 }
 
+resource "azurerm_key_vault_secret" "marsstorage" {
+  name         = "MarsStorageAccount"
+  value        = azurerm_storage_account.permanent_data_mars.primary_connection_string
+  key_vault_id = azurerm_key_vault.coreapp.id
+}
+
 # SQL databases powering some of the core app functionality.
 
 resource "azurerm_sql_database" "astro_objects" {
