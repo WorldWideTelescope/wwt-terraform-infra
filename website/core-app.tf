@@ -33,7 +33,11 @@ resource "azurerm_resource_group" "coreapp_linux" {
 #  principal_id         = azurerm_app_service.communities.identity.0.principal_id
 #}
 
-# The Key Vault for secrets and app configuration.
+# The Key Vault for secrets and app configuration. The web app's
+# configurationbuilder setup scans this keyvault for configuration keys, so its
+# contents should be limited to things specific to the app. For manageability we
+# should also try to make it so that the keyvault contains only secrets, while
+# the app_settings in this file are used for non-secret values.
 
 resource "azurerm_key_vault" "coreapp" {
   name                        = "${var.oldPrefix}kv"
@@ -80,6 +84,18 @@ resource "azurerm_key_vault_secret" "marsstorage" {
   name         = "MarsStorageAccount"
   value        = azurerm_storage_account.permanent_data_mars.primary_connection_string
   key_vault_id = azurerm_key_vault.coreapp.id
+}
+
+resource "azurerm_key_vault_secret" "wwtwebstorage" {
+  // This is only used for a couple of esoteric API calls ... would be nice to
+  // be able to get rid of it.
+  name         = "WWTWebBlobs"
+  value        = azurerm_storage_account.permanent_data_wwtweb.primary_connection_string
+  key_vault_id = azurerm_key_vault.coreapp.id
+
+  tags = {
+    "file-encoding" = "utf-8"
+  }
 }
 
 # SQL databases powering some of the core app functionality.
