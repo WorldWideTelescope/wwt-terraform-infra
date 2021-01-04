@@ -23,6 +23,10 @@ variable "legacyNameCommunitiesStorage" {
   description = "The name to use for the 'legacy' storage account equivalent to 'wwtcommunity' in production"
 }
 
+variable "legacyNameCoreStorage" {
+  description = "The 'legacy name' of the WWT core-data storage account"
+}
+
 variable "legacyNameFrontendGroup" {
   description = "The name to use for the 'legacy' web frontend resource group"
 }
