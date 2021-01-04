@@ -60,6 +60,12 @@ resource "azurerm_key_vault_access_policy" "user" {
 
 # Keyvault secrets connecting the apps to the permanent data accounts
 
+resource "azurerm_key_vault_secret" "corestorage" {
+  name         = "AzurePlateFileStorageAccount"
+  value        = azurerm_storage_account.permanent_data_core.primary_connection_string
+  key_vault_id = azurerm_key_vault.coreapp.id
+}
+
 resource "azurerm_key_vault_secret" "communitystorage" {
   name         = "EarthOnlineStorage"
   value        = azurerm_storage_account.permanent_data_communities.primary_connection_string
