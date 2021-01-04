@@ -27,6 +27,10 @@ variable "legacyNameFrontendGroup" {
   description = "The name to use for the 'legacy' web frontend resource group"
 }
 
+variable "legacyNameMarsStorage" {
+  description = "The 'legacy name' of the Mars data storage account"
+}
+
 variable "legacyNameNginxApp" {
   description = "The 'legacy name' of the core nginx app service"
 }

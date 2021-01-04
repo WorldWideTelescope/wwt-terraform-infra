@@ -60,6 +60,20 @@ resource "azurerm_storage_account" "permanent_data_staticweb" {
   }
 }
 
+// The "mars" storage account hosts Mars imagery, including HiRISE (~12 TiB)
+resource "azurerm_storage_account" "permanent_data_mars" {
+  name                      = var.legacyNameMarsStorage
+  resource_group_name       = azurerm_resource_group.permanent_data.name
+  location                  = azurerm_resource_group.permanent_data.location
+  account_tier              = "Standard"
+  account_replication_type  = "LRS"
+  enable_https_traffic_only = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 // The "wwtcore" database server hosts the AstroObjects and WWTTours databases.
 resource "azurerm_sql_server" "permanent_data_wwtcore_db_server" {
   name                         = var.legacyNameWwtcoreDBServer
