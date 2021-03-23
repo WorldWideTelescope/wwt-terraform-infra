@@ -200,10 +200,19 @@ resource "azurerm_app_service_plan" "data" {
   }
 }
 
-# TODO: possibly add mirror rules that look for under-utilization of CPU, etc.,
-# and scale down the app as needed.
+# Autoscale rules. Note that if you don't have any scale-down rules, your number
+# of instances will only ever go up. Furthermore, the autoscaler has naive logic
+# to prevent "flapping", i.e. cases where the number of instances continually
+# oscillates up and down. Specifically, if you've got rules associated with some
+# metric, the autoscaler will assume that that metric gets divided evenly among
+# your instances, and it won't apply a scaling rule if it thinks the change will
+# apply the rule in the reverse direction. I had to remove scaling rules based
+# on memory percentage since this logic fails if your metric has a "baseline"
+# usage per-instance that doesn't scale with demand. Basically you should only
+# add scaling rules for metrics that will go to zero if no requests are coming
+# in.
 #
-# Also TODO: I don't have a good sense of what a good referene value for the
+# Also TODO: I don't have a good sense of what a good reference value for the
 # HTTP queue length is, thus far.
 #
 # For a list of app service plan metrics, see:
@@ -224,7 +233,8 @@ resource "azurerm_monitor_autoscale_setting" "data" {
       maximum = 10
     }
 
-    # Scale up if average CPU pecentage is >=75% for 5 minutes or more
+    # Scale up if average CPU pecentage is >=75% for 5 minutes or more. Down
+    # if <=50%.
     rule {
       metric_trigger {
         metric_name = "CpuPercentage"
@@ -245,28 +255,28 @@ resource "azurerm_monitor_autoscale_setting" "data" {
       }
     }
 
-    # Scale up if average memory pecentage is >=75% for 5 minutes or more
     rule {
       metric_trigger {
-        metric_name = "MemoryPercentage"
+        metric_name = "CpuPercentage"
         metric_resource_id = azurerm_app_service_plan.data.id
         statistic = "Average"
         time_grain = "PT1M"
         time_aggregation = "Average"
         time_window = "PT5M"
-        operator = "GreaterThanOrEqual"
-        threshold = 75
+        operator = "LessThanOrEqual"
+        threshold = 50
       }
 
       scale_action {
-        direction = "Increase"
+        direction = "Decrease"
         type      = "ChangeCount"
         value     = "1"
         cooldown  = "PT15M"
       }
     }
 
-    # Scale up if average HTTP queue length is >10 for 5 minutes or more
+    # Scale up if average HTTP queue length is >=10 for 5 minutes or more.
+    # Down if <=2.
     rule {
       metric_trigger {
         metric_name = "HttpQueueLength"
@@ -281,6 +291,26 @@ resource "azurerm_monitor_autoscale_setting" "data" {
 
       scale_action {
         direction = "Increase"
+        type      = "ChangeCount"
+        value     = "1"
+        cooldown  = "PT15M"
+      }
+    }
+
+    rule {
+      metric_trigger {
+        metric_name = "HttpQueueLength"
+        metric_resource_id = azurerm_app_service_plan.data.id
+        statistic = "Average"
+        time_grain = "PT1M"
+        time_aggregation = "Average"
+        time_window = "PT5M"
+        operator = "LessThanOrEqual"
+        threshold = 2
+      }
+
+      scale_action {
+        direction = "Decrease"
         type      = "ChangeCount"
         value     = "1"
         cooldown  = "PT15M"
