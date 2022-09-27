@@ -409,11 +409,12 @@ resource "azurerm_linux_web_app" "core_proxy" {
 # random worldwidetelescope.org URLs, but also handles some miscellaneous web
 # traffic. The setup for those custom domains turns out to be quite tedious!
 
-resource "azurerm_app_service" "core_nginx" {
+resource "azurerm_linux_web_app" "core_nginx" {
   name                = "${var.prefix}-corenginx"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_plan_id = azurerm_service_plan.data.id
+  service_plan_id     = azurerm_service_plan.data.id
+  # Docker container: aasworldwidetelescope/nginx-core:latest
 
   app_settings = {
     "PUBLIC_FACING_DOMAIN_NAME"  = "worldwidetelescope.org"
@@ -424,14 +425,13 @@ resource "azurerm_app_service" "core_nginx" {
   site_config {
     always_on        = false
     app_command_line = ""
-    linux_fx_version = "DOCKER|aasworldwidetelescope/nginx-core:latest"
   }
 }
 
 resource "azurerm_app_service_custom_hostname_binding" "core_nginx_binder_wwtforum_org" {
   hostname            = "binder.wwt-forum.org"
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_name    = azurerm_app_service.core_nginx.name
+  app_service_name    = azurerm_linux_web_app.core_nginx.name
 
   # These are managed through the cert binding:
   lifecycle {
@@ -452,7 +452,7 @@ resource "azurerm_app_service_certificate_binding" "core_nginx_binder_wwtforum_o
 resource "azurerm_app_service_custom_hostname_binding" "core_nginx_forum_wwto" {
   hostname            = "forum.worldwidetelescope.org"
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_name    = azurerm_app_service.core_nginx.name
+  app_service_name    = azurerm_linux_web_app.core_nginx.name
 
   lifecycle {
     ignore_changes = [ssl_state, thumbprint]
@@ -472,7 +472,7 @@ resource "azurerm_app_service_certificate_binding" "core_nginx_forum_wwto" {
 resource "azurerm_app_service_custom_hostname_binding" "core_nginx_forums_wwto" {
   hostname            = "forums.worldwidetelescope.org"
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_name    = azurerm_app_service.core_nginx.name
+  app_service_name    = azurerm_linux_web_app.core_nginx.name
 
   lifecycle {
     ignore_changes = [ssl_state, thumbprint]
@@ -500,7 +500,7 @@ resource "azurerm_app_service_certificate_binding" "core_nginx_forums_wwto" {
 resource "azurerm_app_service_custom_hostname_binding" "core_nginx_wwtassets_org" {
   hostname            = "wwtassets.org"
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_name    = azurerm_app_service.core_nginx.name
+  app_service_name    = azurerm_linux_web_app.core_nginx.name
 
   lifecycle {
     ignore_changes = [ssl_state, thumbprint]
