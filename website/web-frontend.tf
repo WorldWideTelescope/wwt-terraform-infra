@@ -137,7 +137,7 @@ resource "azurerm_application_gateway" "frontend" {
 
   backend_address_pool {
     name  = "wwtappgw1-core-mvc-backend"
-    fqdns = [azurerm_app_service.communities.default_site_hostname]
+    fqdns = [azurerm_windows_web_app.communities.default_hostname]
   }
 
   # Backend HTTP settings

@@ -30,7 +30,7 @@ resource "azurerm_resource_group" "coreapp_linux" {
 #resource "azurerm_role_assignment" "appservice_storage" {
 #  scope                = azurerm_storage_account.datatier.id
 #  role_definition_name = "Storage Blob Data Reader"
-#  principal_id         = azurerm_app_service.communities.identity.0.principal_id
+#  principal_id         = azurerm_windows_web_app.communities.identity.0.principal_id
 #}
 
 # The Key Vault for secrets and app configuration. The web app's
@@ -518,16 +518,20 @@ resource "azurerm_service_plan" "communities" {
 }
 
 # The Windows-based Communities app service.
-resource "azurerm_app_service" "communities" {
-  name                = "${var.oldPrefix}-app-service"
-  location            = azurerm_resource_group.coreapp.location
-  resource_group_name = azurerm_resource_group.coreapp.name
-  app_service_plan_id = azurerm_service_plan.communities.id
-  client_cert_mode    = "Required"
+resource "azurerm_windows_web_app" "communities" {
+  name                    = "${var.oldPrefix}-app-service"
+  location                = azurerm_resource_group.coreapp.location
+  resource_group_name     = azurerm_resource_group.coreapp.name
+  service_plan_id         = azurerm_service_plan.communities.id
+  client_certificate_mode = "Required"
 
   site_config {
-    always_on                = true
-    dotnet_framework_version = "v4.0"
+    always_on = true
+
+    application_stack {
+      current_stack  = "dotnet"
+      dotnet_version = "v4.0"
+    }
   }
 
   app_settings = {
@@ -552,14 +556,14 @@ resource "azurerm_app_service_slot" "communities_stage" {
   location            = azurerm_resource_group.coreapp.location
   resource_group_name = azurerm_resource_group.coreapp.name
   app_service_plan_id = azurerm_service_plan.communities.id
-  app_service_name    = azurerm_app_service.communities.name
+  app_service_name    = azurerm_windows_web_app.communities.name
 
   site_config {
     always_on                = false
     dotnet_framework_version = "v4.0"
   }
 
-  app_settings = azurerm_app_service.communities.app_settings
+  app_settings = azurerm_windows_web_app.communities.app_settings
 
   identity {
     type = "SystemAssigned"
@@ -569,7 +573,7 @@ resource "azurerm_app_service_slot" "communities_stage" {
 resource "azurerm_key_vault_access_policy" "communities_app" {
   key_vault_id       = azurerm_key_vault.coreapp.id
   tenant_id          = data.azurerm_client_config.current.tenant_id
-  object_id          = azurerm_app_service.communities.identity.0.principal_id
+  object_id          = azurerm_windows_web_app.communities.identity.0.principal_id
   secret_permissions = ["Get", "List"]
 }
 

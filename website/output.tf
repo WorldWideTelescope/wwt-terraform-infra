@@ -1,5 +1,5 @@
 output "communities_default_url" {
-  value = "https://${azurerm_app_service.communities.default_site_hostname}"
+  value = "https://${azurerm_windows_web_app.communities.default_hostname}"
 }
 
 output "data_default_url" {
