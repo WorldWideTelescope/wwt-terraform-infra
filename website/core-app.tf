@@ -352,17 +352,13 @@ resource "azurerm_linux_web_app" "data" {
 # "stage" slot identical but not always_on. Note that most config/settings
 # swap when you swap deployment slots, so this slot and production must
 # be kept in sync. Fortunately the always_on setting stays put.
-resource "azurerm_app_service_slot" "data_stage" {
-  name                = "stage"
-  location            = azurerm_resource_group.coreapp_linux.location
-  resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_plan_id = azurerm_service_plan.data.id
-  app_service_name    = azurerm_linux_web_app.data.name
+resource "azurerm_linux_web_app_slot" "data_stage" {
+  name           = "stage"
+  app_service_id = azurerm_linux_web_app.data.id
 
   site_config {
     always_on        = false
     app_command_line = ""
-    linux_fx_version = "DOCKER|aasworldwidetelescope/core-data:latest"
   }
 
   app_settings = azurerm_linux_web_app.data.app_settings
@@ -382,7 +378,7 @@ resource "azurerm_key_vault_access_policy" "data_appservice" {
 resource "azurerm_key_vault_access_policy" "data_stage_appservice" {
   key_vault_id       = azurerm_key_vault.coreapp.id
   tenant_id          = data.azurerm_client_config.current.tenant_id
-  object_id          = azurerm_app_service_slot.data_stage.identity.0.principal_id
+  object_id          = azurerm_linux_web_app_slot.data_stage.identity.0.principal_id
   secret_permissions = ["Get", "List"]
 }
 
