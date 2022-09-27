@@ -67,12 +67,14 @@ resource "azurerm_key_vault_secret" "corestorage" {
   name         = "AzurePlateFileStorageAccount"
   value        = azurerm_storage_account.permanent_data_core.primary_connection_string
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 }
 
 resource "azurerm_key_vault_secret" "communitystorage" {
   name         = "EarthOnlineStorage"
   value        = azurerm_storage_account.permanent_data_communities.primary_connection_string
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 
   tags = {
     "file-encoding" = "utf-8"
@@ -83,6 +85,7 @@ resource "azurerm_key_vault_secret" "marsstorage" {
   name         = "MarsStorageAccount"
   value        = azurerm_storage_account.permanent_data_mars.primary_connection_string
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 }
 
 resource "azurerm_key_vault_secret" "wwtwebstorage" {
@@ -91,6 +94,7 @@ resource "azurerm_key_vault_secret" "wwtwebstorage" {
   name         = "WWTWebBlobs"
   value        = azurerm_storage_account.permanent_data_wwtweb.primary_connection_string
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 
   tags = {
     "file-encoding" = "utf-8"
@@ -136,12 +140,14 @@ resource "azurerm_key_vault_secret" "layerscapedb" {
   name         = "EarthOnlineEntities"
   value        = "metadata=res://*/Models.EarthOnline.csdl|res://*/Models.EarthOnline.ssdl|res://*/Models.EarthOnline.msl;provider=System.Data.SqlClient;provider connection string=\"Data Source=${azurerm_sql_server.permanent_data_communities_db_server.fully_qualified_domain_name};Initial Catalog=${azurerm_sql_database.layerscape.name};Integrated Security=False;User ID=${azurerm_sql_server.permanent_data_communities_db_server.administrator_login};Password=${var.layerscapeDbPassword};multipleactiveresultsets=True;App=EntityFramework\""
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 }
 
 resource "azurerm_key_vault_secret" "toursdb" {
   name         = "WWTToursDBConnectionString"
   value        = "Server=tcp:${azurerm_sql_server.permanent_data_wwtcore_db_server.fully_qualified_domain_name},1433;Database=${azurerm_sql_database.tours.name};User ID=${azurerm_sql_server.permanent_data_wwtcore_db_server.administrator_login}@${azurerm_sql_server.permanent_data_wwtcore_db_server.name};Password=${var.wwttoursDbPassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;"
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 
   tags = {
     "file-encoding" = "utf-8"
@@ -168,6 +174,7 @@ resource "azurerm_key_vault_secret" "redis" {
   name         = "RedisConnectionString"
   value        = azurerm_redis_cache.wwt.primary_connection_string
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 
   tags = {
     environment = "Production"
@@ -415,7 +422,9 @@ resource "azurerm_app_service" "core_nginx" {
   app_service_plan_id = azurerm_app_service_plan.data.id
 
   app_settings = {
-    "PUBLIC_FACING_DOMAIN_NAME" = "worldwidetelescope.org"
+    "PUBLIC_FACING_DOMAIN_NAME"  = "worldwidetelescope.org"
+    "DOCKER_ENABLE_CI"           = "true"
+    "DOCKER_REGISTRY_SERVER_URL" = "https://index.docker.io/v1"
   }
 
   site_config {
@@ -523,6 +532,7 @@ resource "azurerm_app_service" "communities" {
   location            = azurerm_resource_group.coreapp.location
   resource_group_name = azurerm_resource_group.coreapp.name
   app_service_plan_id = azurerm_app_service_plan.communities.id
+  client_cert_mode    = "Required"
 
   site_config {
     always_on                = true

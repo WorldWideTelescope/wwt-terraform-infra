@@ -19,6 +19,7 @@ resource "azurerm_storage_account" "permanent_data_core" {
   account_tier              = "Standard"
   account_replication_type  = "GRS"
   enable_https_traffic_only = false
+  min_tls_version           = "TLS1_0" # added to reflect ground truth 2022-Sep
 
   lifecycle {
     prevent_destroy = true
@@ -34,6 +35,7 @@ resource "azurerm_storage_account" "permanent_data_wwtweb" {
   account_tier              = "Standard"
   account_replication_type  = "GRS"
   enable_https_traffic_only = false
+  min_tls_version           = "TLS1_0" # added to reflect ground truth 2022-Sep
 
   lifecycle {
     prevent_destroy = true
@@ -49,6 +51,7 @@ resource "azurerm_storage_account" "permanent_data_communities" {
   account_tier              = "Standard"
   account_replication_type  = "LRS"
   enable_https_traffic_only = false
+  min_tls_version           = "TLS1_0" # added to reflect ground truth 2022-Sep
 
   lifecycle {
     prevent_destroy = true
@@ -64,6 +67,7 @@ resource "azurerm_storage_account" "permanent_data_staticweb" {
   account_tier              = "Standard"
   account_replication_type  = "RAGRS"
   enable_https_traffic_only = false
+  min_tls_version           = "TLS1_0" # added to reflect ground truth 2022-Sep
 
   static_website {
     error_404_document = "404.html"
@@ -83,6 +87,7 @@ resource "azurerm_storage_account" "permanent_data_mars" {
   account_tier              = "Standard"
   account_replication_type  = "LRS"
   enable_https_traffic_only = false
+  min_tls_version           = "TLS1_0" # added to reflect ground truth 2022-Sep
 
   lifecycle {
     prevent_destroy = true

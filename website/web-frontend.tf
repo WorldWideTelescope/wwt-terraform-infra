@@ -62,10 +62,8 @@ resource "azurerm_application_gateway" "frontend" {
   }
 
   identity {
-    type = "UserAssigned"
-    # There seems to be a capitalization inconsistency here that doesn't go away
-    # with a `terraform apply`.
-    identity_ids = [replace(azurerm_user_assigned_identity.gateway.id, "resourceGroups", "resourcegroups")]
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.gateway.id]
   }
 
   autoscale_configuration {
@@ -184,6 +182,7 @@ resource "azurerm_application_gateway" "frontend" {
     rule_type          = "PathBasedRouting"
     http_listener_name = "anyhost-https"
     url_path_map_name  = "anyhost-https-path-routing"
+    priority           = 10020
   }
 
   request_routing_rule {
@@ -191,6 +190,7 @@ resource "azurerm_application_gateway" "frontend" {
     rule_type          = "PathBasedRouting"
     http_listener_name = "anyhost-http"
     url_path_map_name  = "anyhost-http-path-routing"
+    priority           = 10010
   }
 
   url_path_map {
