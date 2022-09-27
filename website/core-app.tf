@@ -551,16 +551,17 @@ resource "azurerm_windows_web_app" "communities" {
   }
 }
 
-resource "azurerm_app_service_slot" "communities_stage" {
-  name                = "stage"
-  location            = azurerm_resource_group.coreapp.location
-  resource_group_name = azurerm_resource_group.coreapp.name
-  app_service_plan_id = azurerm_service_plan.communities.id
-  app_service_name    = azurerm_windows_web_app.communities.name
+resource "azurerm_windows_web_app_slot" "communities_stage" {
+  name           = "stage"
+  app_service_id = azurerm_windows_web_app.communities.id
 
   site_config {
-    always_on                = false
-    dotnet_framework_version = "v4.0"
+    always_on = false
+
+    application_stack {
+      current_stack  = "dotnet"
+      dotnet_version = "v4.0"
+    }
   }
 
   app_settings = azurerm_windows_web_app.communities.app_settings
@@ -580,6 +581,6 @@ resource "azurerm_key_vault_access_policy" "communities_app" {
 resource "azurerm_key_vault_access_policy" "communities_app_stage" {
   key_vault_id       = azurerm_key_vault.coreapp.id
   tenant_id          = data.azurerm_client_config.current.tenant_id
-  object_id          = azurerm_app_service_slot.communities_stage.identity.0.principal_id
+  object_id          = azurerm_windows_web_app_slot.communities_stage.identity.0.principal_id
   secret_permissions = ["Get", "List"]
 }
