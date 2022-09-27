@@ -3,6 +3,13 @@
 # https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs
 #
 # Most of the action is in other files.
+#
+# To update the provider:
+#
+# - Remove `.terraform.lock.hcl`
+# - Update minimum version here
+# - Run `terraform init`
+# - Run `terraform (plan|apply) -var-file=prod.tfvars -refresh-only`
 
 provider "azurerm" {
   features {}
