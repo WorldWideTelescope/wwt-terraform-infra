@@ -37,3 +37,14 @@ terraform {
 
 data "azurerm_client_config" "current" {
 }
+
+# Support resource group; no obvious better place to put it right now
+
+resource "azurerm_resource_group" "support" {
+  name     = "devops-support"
+  location = var.location
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
