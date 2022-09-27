@@ -96,12 +96,14 @@ resource "azurerm_storage_account" "permanent_data_mars" {
 
 // The "wwtcore" database server hosts the AstroObjects and WWTTours databases.
 resource "azurerm_mssql_server" "permanent_data_wwtcore_db_server" {
-  name                         = var.legacyNameWwtcoreDBServer
-  resource_group_name          = azurerm_resource_group.permanent_data.name
-  location                     = azurerm_resource_group.permanent_data.location
-  version                      = "12.0"
-  administrator_login          = "wwtuser"
-  administrator_login_password = var.wwtcoreDbAdminPassword
+  name                          = var.legacyNameWwtcoreDBServer
+  resource_group_name           = azurerm_resource_group.permanent_data.name
+  location                      = azurerm_resource_group.permanent_data.location
+  version                       = "12.0"
+  administrator_login           = "wwtuser"
+  administrator_login_password  = var.wwtcoreDbAdminPassword
+  minimum_tls_version           = "Disabled"
+  public_network_access_enabled = false
 
   lifecycle {
     prevent_destroy = true
@@ -116,6 +118,7 @@ resource "azurerm_mssql_server" "permanent_data_communities_db_server" {
   version                      = "12.0"
   administrator_login          = "wwtprod"
   administrator_login_password = var.communitiesDbAdminPassword
+  minimum_tls_version          = "Disabled"
 
   lifecycle {
     prevent_destroy = true

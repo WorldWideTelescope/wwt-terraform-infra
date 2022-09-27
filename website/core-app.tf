@@ -361,6 +361,11 @@ resource "azurerm_linux_web_app_slot" "data_stage" {
   site_config {
     always_on        = false
     app_command_line = ""
+
+    # Added 2022 Sep to match ground truth:
+    ftps_state              = "AllAllowed"
+    scm_minimum_tls_version = "1.0"
+    use_32_bit_worker       = false
   }
 
   app_settings = azurerm_linux_web_app.data.app_settings
@@ -398,6 +403,23 @@ resource "azurerm_linux_web_app" "core_proxy" {
   site_config {
     always_on        = false
     app_command_line = ""
+
+    # Added 2022 Sep to match ground truth:
+    ftps_state              = "AllAllowed"
+    scm_minimum_tls_version = "1.0"
+    use_32_bit_worker       = false
+  }
+
+  logs {
+    detailed_error_messages = false
+    failed_request_tracing  = false
+
+    http_logs {
+      file_system {
+        retention_in_days = 14
+        retention_in_mb   = 35
+      }
+    }
   }
 
   lifecycle {
@@ -425,6 +447,11 @@ resource "azurerm_linux_web_app" "core_nginx" {
   site_config {
     always_on        = false
     app_command_line = ""
+
+    # Added 2022 Sep to match ground truth:
+    ftps_state              = "AllAllowed"
+    scm_minimum_tls_version = "1.0"
+    use_32_bit_worker       = false
   }
 }
 
@@ -532,6 +559,11 @@ resource "azurerm_windows_web_app" "communities" {
       current_stack  = "dotnet"
       dotnet_version = "v4.0"
     }
+
+    # Added to reflect ground truth, 2022-Sep:
+    ftps_state              = "AllAllowed"
+    scm_minimum_tls_version = "1.0"
+    use_32_bit_worker       = false
   }
 
   app_settings = {
@@ -546,8 +578,37 @@ resource "azurerm_windows_web_app" "communities" {
     "UseCaching"               = "true"
   }
 
+  logs {
+    detailed_error_messages = true
+    failed_request_tracing  = true
+
+    http_logs {
+      azure_blob_storage {
+        retention_in_days = 180
+        sas_url           = var.appLogSasUrl
+      }
+    }
+  }
+
   identity {
     type = "SystemAssigned"
+  }
+
+  # Added to reflect ground truth, 2022-Sep:
+  sticky_settings {
+    app_setting_names = [
+      "APPINSIGHTS_PROFILERFEATURE_VERSION",
+      "APPINSIGHTS_SNAPSHOTFEATURE_VERSION",
+      "APPLICATIONINSIGHTS_CONNECTION_STRING ",
+      "ApplicationInsightsAgent_EXTENSION_VERSION",
+      "DiagnosticServices_EXTENSION_VERSION",
+      "InstrumentationEngine_EXTENSION_VERSION",
+      "LiveClientRedirectUrl",
+      "SnapshotDebugger_EXTENSION_VERSION",
+      "XDT_MicrosoftApplicationInsights_BaseExtensions",
+      "XDT_MicrosoftApplicationInsights_Mode",
+      "XDT_MicrosoftApplicationInsights_PreemptSdk",
+    ]
   }
 }
 
@@ -562,9 +623,23 @@ resource "azurerm_windows_web_app_slot" "communities_stage" {
       current_stack  = "dotnet"
       dotnet_version = "v4.0"
     }
+
+    # Added to reflect ground truth, 2022-Sep:
+    ftps_state              = "AllAllowed"
+    scm_minimum_tls_version = "1.0"
+    virtual_application {
+      physical_path = "site\\wwwroot"
+      preload       = false
+      virtual_path  = "/"
+    }
   }
 
   app_settings = azurerm_windows_web_app.communities.app_settings
+
+  logs {
+    detailed_error_messages = true
+    failed_request_tracing  = true
+  }
 
   identity {
     type = "SystemAssigned"

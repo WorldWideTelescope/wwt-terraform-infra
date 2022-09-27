@@ -76,3 +76,7 @@ variable "layerscapeDbPassword" {
 variable "wwttoursDbPassword" {
   description = "The password to the WWTTours database user account"
 }
+
+variable "appLogSasUrl" {
+  description = "Azure Blob Storage SAS URL for Windows web app diagnostic logs"
+}
