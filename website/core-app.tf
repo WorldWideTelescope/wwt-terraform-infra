@@ -190,17 +190,12 @@ resource "azurerm_application_insights" "wwt" {
 # App service plan for the Linux-based apps. This includes the
 # core data services.
 
-resource "azurerm_app_service_plan" "data" {
+resource "azurerm_service_plan" "data" {
   name                = "${var.oldPrefix}-data-plan"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  kind                = "Linux"
-  reserved            = true
-
-  sku {
-    tier = "Standard"
-    size = "S1"
-  }
+  os_type             = "Linux"
+  sku_name            = "S1"
 }
 
 # Autoscale rules. Note that if you don't have any scale-down rules, your number
@@ -225,7 +220,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
   name                = "${var.oldPrefix}-data-autoscaling"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  target_resource_id  = azurerm_app_service_plan.data.id
+  target_resource_id  = azurerm_service_plan.data.id
 
   profile {
     name = "defaultProfile"
@@ -241,7 +236,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     rule {
       metric_trigger {
         metric_name        = "CpuPercentage"
-        metric_resource_id = azurerm_app_service_plan.data.id
+        metric_resource_id = azurerm_service_plan.data.id
         statistic          = "Average"
         time_grain         = "PT1M"
         time_aggregation   = "Average"
@@ -261,7 +256,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     rule {
       metric_trigger {
         metric_name        = "CpuPercentage"
-        metric_resource_id = azurerm_app_service_plan.data.id
+        metric_resource_id = azurerm_service_plan.data.id
         statistic          = "Average"
         time_grain         = "PT1M"
         time_aggregation   = "Average"
@@ -283,7 +278,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     rule {
       metric_trigger {
         metric_name        = "HttpQueueLength"
-        metric_resource_id = azurerm_app_service_plan.data.id
+        metric_resource_id = azurerm_service_plan.data.id
         statistic          = "Average"
         time_grain         = "PT1M"
         time_aggregation   = "Average"
@@ -303,7 +298,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     rule {
       metric_trigger {
         metric_name        = "HttpQueueLength"
-        metric_resource_id = azurerm_app_service_plan.data.id
+        metric_resource_id = azurerm_service_plan.data.id
         statistic          = "Average"
         time_grain         = "PT1M"
         time_aggregation   = "Average"
@@ -327,7 +322,7 @@ resource "azurerm_app_service" "data" {
   name                = "${var.oldPrefix}-data-app"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_plan_id = azurerm_app_service_plan.data.id
+  app_service_plan_id = azurerm_service_plan.data.id
 
   site_config {
     always_on        = true
@@ -357,7 +352,7 @@ resource "azurerm_app_service_slot" "data_stage" {
   name                = "stage"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_plan_id = azurerm_app_service_plan.data.id
+  app_service_plan_id = azurerm_service_plan.data.id
   app_service_name    = azurerm_app_service.data.name
 
   site_config {
@@ -395,7 +390,7 @@ resource "azurerm_app_service" "core_proxy" {
   name                = "${var.prefix}-coreproxy"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_plan_id = azurerm_app_service_plan.data.id
+  app_service_plan_id = azurerm_service_plan.data.id
 
   site_config {
     always_on        = false
@@ -416,7 +411,7 @@ resource "azurerm_app_service" "core_nginx" {
   name                = "${var.prefix}-corenginx"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_plan_id = azurerm_app_service_plan.data.id
+  app_service_plan_id = azurerm_service_plan.data.id
 
   app_settings = {
     "PUBLIC_FACING_DOMAIN_NAME"  = "worldwidetelescope.org"
@@ -512,15 +507,12 @@ resource "azurerm_app_service_custom_hostname_binding" "core_nginx_wwtassets_org
 
 # App service plan for the Windows-based app(s). At the moment this
 # is only the Communities functionality.
-resource "azurerm_app_service_plan" "communities" {
+resource "azurerm_service_plan" "communities" {
   name                = "${var.oldPrefix}-app-service-plan"
   location            = azurerm_resource_group.coreapp.location
   resource_group_name = azurerm_resource_group.coreapp.name
-
-  sku {
-    tier = "Standard"
-    size = "S1"
-  }
+  os_type             = "Windows"
+  sku_name            = "S1"
 }
 
 # The Windows-based Communities app service.
@@ -528,7 +520,7 @@ resource "azurerm_app_service" "communities" {
   name                = "${var.oldPrefix}-app-service"
   location            = azurerm_resource_group.coreapp.location
   resource_group_name = azurerm_resource_group.coreapp.name
-  app_service_plan_id = azurerm_app_service_plan.communities.id
+  app_service_plan_id = azurerm_service_plan.communities.id
   client_cert_mode    = "Required"
 
   site_config {
@@ -557,7 +549,7 @@ resource "azurerm_app_service_slot" "communities_stage" {
   name                = "stage"
   location            = azurerm_resource_group.coreapp.location
   resource_group_name = azurerm_resource_group.coreapp.name
-  app_service_plan_id = azurerm_app_service_plan.communities.id
+  app_service_plan_id = azurerm_service_plan.communities.id
   app_service_name    = azurerm_app_service.communities.name
 
   site_config {
