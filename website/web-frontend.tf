@@ -117,7 +117,7 @@ resource "azurerm_application_gateway" "frontend" {
 
   backend_address_pool {
     name  = "wwtappgw1-proxy-backend"
-    fqdns = [azurerm_app_service.core_proxy.default_site_hostname]
+    fqdns = [azurerm_linux_web_app.core_proxy.default_hostname]
   }
 
   backend_address_pool {

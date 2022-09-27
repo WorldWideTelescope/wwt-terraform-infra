@@ -323,6 +323,7 @@ resource "azurerm_linux_web_app" "data" {
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
   service_plan_id     = azurerm_service_plan.data.id
+  # Docker container: aasworldwidetelescope/core-data:latest
 
   site_config {
     always_on        = true
@@ -355,6 +356,7 @@ resource "azurerm_linux_web_app" "data" {
 resource "azurerm_linux_web_app_slot" "data_stage" {
   name           = "stage"
   app_service_id = azurerm_linux_web_app.data.id
+  # Docker container: aasworldwidetelescope/core-data:latest
 
   site_config {
     always_on        = false
@@ -386,16 +388,16 @@ resource "azurerm_key_vault_access_policy" "data_stage_appservice" {
 # apps. It's essentially standalone, but does get mixed into the /wwtweb/ URL
 # hierarchy.
 
-resource "azurerm_app_service" "core_proxy" {
+resource "azurerm_linux_web_app" "core_proxy" {
   name                = "${var.prefix}-coreproxy"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_plan_id = azurerm_service_plan.data.id
+  service_plan_id     = azurerm_service_plan.data.id
+  # Docker container: aasworldwidetelescope/proxy:latest"
 
   site_config {
     always_on        = false
     app_command_line = ""
-    linux_fx_version = "DOCKER|aasworldwidetelescope/proxy:latest"
   }
 
   lifecycle {
