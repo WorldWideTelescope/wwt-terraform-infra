@@ -103,33 +103,30 @@ resource "azurerm_key_vault_secret" "wwtwebstorage" {
 
 # SQL databases powering some of the core app functionality.
 
-resource "azurerm_sql_database" "astro_objects" {
-  name                = "AstroObjects"
-  resource_group_name = azurerm_resource_group.permanent_data.name
-  location            = azurerm_resource_group.permanent_data.location
-  server_name         = azurerm_sql_server.permanent_data_wwtcore_db_server.name
+resource "azurerm_mssql_database" "astro_objects" {
+  name      = "AstroObjects"
+  server_id = azurerm_sql_server.permanent_data_wwtcore_db_server.id
+  sku_name  = "S0"
 
   lifecycle {
     prevent_destroy = true
   }
 }
 
-resource "azurerm_sql_database" "layerscape" {
-  name                = "Layerscape"
-  resource_group_name = azurerm_resource_group.permanent_data.name
-  location            = azurerm_resource_group.permanent_data.location
-  server_name         = azurerm_sql_server.permanent_data_communities_db_server.name
+resource "azurerm_mssql_database" "layerscape" {
+  name      = "Layerscape"
+  server_id = azurerm_sql_server.permanent_data_communities_db_server.id
+  sku_name  = "S0"
 
   lifecycle {
     prevent_destroy = true
   }
 }
 
-resource "azurerm_sql_database" "tours" {
-  name                = "WWTTours"
-  resource_group_name = azurerm_resource_group.permanent_data.name
-  location            = azurerm_resource_group.permanent_data.location
-  server_name         = azurerm_sql_server.permanent_data_wwtcore_db_server.name
+resource "azurerm_mssql_database" "tours" {
+  name      = "WWTTours"
+  server_id = azurerm_sql_server.permanent_data_wwtcore_db_server.id
+  sku_name  = "S0"
 
   lifecycle {
     prevent_destroy = true
@@ -138,14 +135,14 @@ resource "azurerm_sql_database" "tours" {
 
 resource "azurerm_key_vault_secret" "layerscapedb" {
   name         = "EarthOnlineEntities"
-  value        = "metadata=res://*/Models.EarthOnline.csdl|res://*/Models.EarthOnline.ssdl|res://*/Models.EarthOnline.msl;provider=System.Data.SqlClient;provider connection string=\"Data Source=${azurerm_sql_server.permanent_data_communities_db_server.fully_qualified_domain_name};Initial Catalog=${azurerm_sql_database.layerscape.name};Integrated Security=False;User ID=${azurerm_sql_server.permanent_data_communities_db_server.administrator_login};Password=${var.layerscapeDbPassword};multipleactiveresultsets=True;App=EntityFramework\""
+  value        = "metadata=res://*/Models.EarthOnline.csdl|res://*/Models.EarthOnline.ssdl|res://*/Models.EarthOnline.msl;provider=System.Data.SqlClient;provider connection string=\"Data Source=${azurerm_sql_server.permanent_data_communities_db_server.fully_qualified_domain_name};Initial Catalog=${azurerm_mssql_database.layerscape.name};Integrated Security=False;User ID=${azurerm_sql_server.permanent_data_communities_db_server.administrator_login};Password=${var.layerscapeDbPassword};multipleactiveresultsets=True;App=EntityFramework\""
   key_vault_id = azurerm_key_vault.coreapp.id
   content_type = "text/plain"
 }
 
 resource "azurerm_key_vault_secret" "toursdb" {
   name         = "WWTToursDBConnectionString"
-  value        = "Server=tcp:${azurerm_sql_server.permanent_data_wwtcore_db_server.fully_qualified_domain_name},1433;Database=${azurerm_sql_database.tours.name};User ID=${azurerm_sql_server.permanent_data_wwtcore_db_server.administrator_login}@${azurerm_sql_server.permanent_data_wwtcore_db_server.name};Password=${var.wwttoursDbPassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;"
+  value        = "Server=tcp:${azurerm_sql_server.permanent_data_wwtcore_db_server.fully_qualified_domain_name},1433;Database=${azurerm_mssql_database.tours.name};User ID=${azurerm_sql_server.permanent_data_wwtcore_db_server.administrator_login}@${azurerm_sql_server.permanent_data_wwtcore_db_server.name};Password=${var.wwttoursDbPassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;"
   key_vault_id = azurerm_key_vault.coreapp.id
   content_type = "text/plain"
 
