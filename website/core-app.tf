@@ -56,10 +56,10 @@ resource "azurerm_key_vault" "coreapp" {
 }
 
 resource "azurerm_key_vault_access_policy" "user" {
-  key_vault_id            = azurerm_key_vault.coreapp.id
-  tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = data.azurerm_client_config.current.object_id
-  secret_permissions      = ["get", "set", "list", "delete"]
+  key_vault_id       = azurerm_key_vault.coreapp.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = data.azurerm_client_config.current.object_id
+  secret_permissions = ["get", "set", "list", "delete"]
 }
 
 # Keyvault secrets connecting the apps to the permanent data accounts
@@ -237,14 +237,14 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     # if <=50%.
     rule {
       metric_trigger {
-        metric_name = "CpuPercentage"
+        metric_name        = "CpuPercentage"
         metric_resource_id = azurerm_app_service_plan.data.id
-        statistic = "Average"
-        time_grain = "PT1M"
-        time_aggregation = "Average"
-        time_window = "PT5M"
-        operator = "GreaterThanOrEqual"
-        threshold = 75
+        statistic          = "Average"
+        time_grain         = "PT1M"
+        time_aggregation   = "Average"
+        time_window        = "PT5M"
+        operator           = "GreaterThanOrEqual"
+        threshold          = 75
       }
 
       scale_action {
@@ -257,14 +257,14 @@ resource "azurerm_monitor_autoscale_setting" "data" {
 
     rule {
       metric_trigger {
-        metric_name = "CpuPercentage"
+        metric_name        = "CpuPercentage"
         metric_resource_id = azurerm_app_service_plan.data.id
-        statistic = "Average"
-        time_grain = "PT1M"
-        time_aggregation = "Average"
-        time_window = "PT5M"
-        operator = "LessThanOrEqual"
-        threshold = 50
+        statistic          = "Average"
+        time_grain         = "PT1M"
+        time_aggregation   = "Average"
+        time_window        = "PT5M"
+        operator           = "LessThanOrEqual"
+        threshold          = 50
       }
 
       scale_action {
@@ -279,14 +279,14 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     # Down if <=2.
     rule {
       metric_trigger {
-        metric_name = "HttpQueueLength"
+        metric_name        = "HttpQueueLength"
         metric_resource_id = azurerm_app_service_plan.data.id
-        statistic = "Average"
-        time_grain = "PT1M"
-        time_aggregation = "Average"
-        time_window = "PT5M"
-        operator = "GreaterThanOrEqual"
-        threshold = 10
+        statistic          = "Average"
+        time_grain         = "PT1M"
+        time_aggregation   = "Average"
+        time_window        = "PT5M"
+        operator           = "GreaterThanOrEqual"
+        threshold          = 10
       }
 
       scale_action {
@@ -299,14 +299,14 @@ resource "azurerm_monitor_autoscale_setting" "data" {
 
     rule {
       metric_trigger {
-        metric_name = "HttpQueueLength"
+        metric_name        = "HttpQueueLength"
         metric_resource_id = azurerm_app_service_plan.data.id
-        statistic = "Average"
-        time_grain = "PT1M"
-        time_aggregation = "Average"
-        time_window = "PT5M"
-        operator = "LessThanOrEqual"
-        threshold = 2
+        statistic          = "Average"
+        time_grain         = "PT1M"
+        time_aggregation   = "Average"
+        time_window        = "PT5M"
+        operator           = "LessThanOrEqual"
+        threshold          = 2
       }
 
       scale_action {
@@ -327,18 +327,18 @@ resource "azurerm_app_service" "data" {
   app_service_plan_id = azurerm_app_service_plan.data.id
 
   site_config {
-    always_on = true
+    always_on        = true
     app_command_line = ""
     linux_fx_version = "DOCKER|aasworldwidetelescope/core-data:latest"
   }
 
   app_settings = {
-    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
-    "DOCKER_REGISTRY_SERVER_URL" = "https://index.docker.io"
-    "KeyVaultName" = azurerm_key_vault.coreapp.name
-    "SlidingExpiration" = "30.00:00:00" # default to 30 days to keep cached items
-    "UseAzurePlateFiles" = "true"
-    "UseCaching" = "true"
+    "APPINSIGHTS_INSTRUMENTATIONKEY"      = azurerm_application_insights.wwt.instrumentation_key
+    "DOCKER_REGISTRY_SERVER_URL"          = "https://index.docker.io"
+    "KeyVaultName"                        = azurerm_key_vault.coreapp.name
+    "SlidingExpiration"                   = "30.00:00:00" # default to 30 days to keep cached items
+    "UseAzurePlateFiles"                  = "true"
+    "UseCaching"                          = "true"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
   }
 
@@ -358,7 +358,7 @@ resource "azurerm_app_service_slot" "data_stage" {
   app_service_name    = azurerm_app_service.data.name
 
   site_config {
-    always_on = false
+    always_on        = false
     app_command_line = ""
     linux_fx_version = "DOCKER|aasworldwidetelescope/core-data:latest"
   }
@@ -371,17 +371,17 @@ resource "azurerm_app_service_slot" "data_stage" {
 }
 
 resource "azurerm_key_vault_access_policy" "data_appservice" {
-  key_vault_id            = azurerm_key_vault.coreapp.id
-  tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = azurerm_app_service.data.identity.0.principal_id
-  secret_permissions      = ["get", "list"]
+  key_vault_id       = azurerm_key_vault.coreapp.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = azurerm_app_service.data.identity.0.principal_id
+  secret_permissions = ["get", "list"]
 }
 
 resource "azurerm_key_vault_access_policy" "data_stage_appservice" {
-  key_vault_id            = azurerm_key_vault.coreapp.id
-  tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = azurerm_app_service_slot.data_stage.identity.0.principal_id
-  secret_permissions      = ["get", "list"]
+  key_vault_id       = azurerm_key_vault.coreapp.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = azurerm_app_service_slot.data_stage.identity.0.principal_id
+  secret_permissions = ["get", "list"]
 }
 
 # Separate Linux-based proxy service. This used to be implemented in the core
@@ -395,7 +395,7 @@ resource "azurerm_app_service" "core_proxy" {
   app_service_plan_id = azurerm_app_service_plan.data.id
 
   site_config {
-    always_on = false
+    always_on        = false
     app_command_line = ""
     linux_fx_version = "DOCKER|aasworldwidetelescope/proxy:latest"
   }
@@ -420,7 +420,7 @@ resource "azurerm_app_service" "core_nginx" {
   }
 
   site_config {
-    always_on = false
+    always_on        = false
     app_command_line = ""
     linux_fx_version = "DOCKER|aasworldwidetelescope/nginx-core:latest"
   }
@@ -526,20 +526,20 @@ resource "azurerm_app_service" "communities" {
   app_service_plan_id = azurerm_app_service_plan.communities.id
 
   site_config {
-    always_on = true
+    always_on                = true
     dotnet_framework_version = "v4.0"
   }
 
   app_settings = {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
     #"AzurePlateFileStorageAccount" = azurerm_storage_account.datatier.primary_blob_endpoint
-    "KeyVaultName" = azurerm_key_vault.coreapp.name
-    "LiveClientId" = var.liveClientId
+    "KeyVaultName"             = azurerm_key_vault.coreapp.name
+    "LiveClientId"             = var.liveClientId
     "LiveClientRedirectUrlMap" = var.liveClientRedirectUrlMap
-    "LiveClientSecret" = var.liveClientSecret
-    "SlidingExpiration" = "30.00:00:00" # default to 30 days to keep cached items
-    "UseAzurePlateFiles" = "true"
-    "UseCaching" = "true"
+    "LiveClientSecret"         = var.liveClientSecret
+    "SlidingExpiration"        = "30.00:00:00" # default to 30 days to keep cached items
+    "UseAzurePlateFiles"       = "true"
+    "UseCaching"               = "true"
   }
 
   identity {
@@ -555,7 +555,7 @@ resource "azurerm_app_service_slot" "communities_stage" {
   app_service_name    = azurerm_app_service.communities.name
 
   site_config {
-    always_on = false
+    always_on                = false
     dotnet_framework_version = "v4.0"
   }
 
@@ -567,15 +567,15 @@ resource "azurerm_app_service_slot" "communities_stage" {
 }
 
 resource "azurerm_key_vault_access_policy" "communities_app" {
-  key_vault_id            = azurerm_key_vault.coreapp.id
-  tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = azurerm_app_service.communities.identity.0.principal_id
-  secret_permissions      = ["get", "list"]
+  key_vault_id       = azurerm_key_vault.coreapp.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = azurerm_app_service.communities.identity.0.principal_id
+  secret_permissions = ["get", "list"]
 }
 
 resource "azurerm_key_vault_access_policy" "communities_app_stage" {
-  key_vault_id            = azurerm_key_vault.coreapp.id
-  tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = azurerm_app_service_slot.communities_stage.identity.0.principal_id
-  secret_permissions      = ["get", "list"]
+  key_vault_id       = azurerm_key_vault.coreapp.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = azurerm_app_service_slot.communities_stage.identity.0.principal_id
+  secret_permissions = ["get", "list"]
 }
