@@ -95,7 +95,7 @@ resource "azurerm_storage_account" "permanent_data_mars" {
 }
 
 // The "wwtcore" database server hosts the AstroObjects and WWTTours databases.
-resource "azurerm_sql_server" "permanent_data_wwtcore_db_server" {
+resource "azurerm_mssql_server" "permanent_data_wwtcore_db_server" {
   name                         = var.legacyNameWwtcoreDBServer
   resource_group_name          = azurerm_resource_group.permanent_data.name
   location                     = azurerm_resource_group.permanent_data.location
@@ -109,7 +109,7 @@ resource "azurerm_sql_server" "permanent_data_wwtcore_db_server" {
 }
 
 // The "communities" database server hosts the Layerscape database.
-resource "azurerm_sql_server" "permanent_data_communities_db_server" {
+resource "azurerm_mssql_server" "permanent_data_communities_db_server" {
   name                         = var.legacyNameCommunitiesDBServer
   resource_group_name          = azurerm_resource_group.permanent_data.name
   location                     = azurerm_resource_group.permanent_data.location
