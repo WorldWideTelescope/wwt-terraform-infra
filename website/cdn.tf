@@ -21,12 +21,12 @@ resource "azurerm_cdn_endpoint" "web" {
 
   is_compression_enabled        = true
   optimization_type             = "GeneralWebDelivery"
-  origin_host_header            = "wwtwebstatic.z22.web.core.windows.net"
+  origin_host_header            = azurerm_storage_account.permanent_data_staticweb.primary_web_host
   querystring_caching_behaviour = "UseQueryString"
 
   origin {
     name      = "wwtwebstatic-blob-core-windows-net"
-    host_name = "wwtwebstatic.z22.web.core.windows.net"
+    host_name = azurerm_storage_account.permanent_data_staticweb.primary_web_host
   }
 
   global_delivery_rule {
@@ -48,6 +48,10 @@ resource "azurerm_cdn_endpoint" "web" {
       value  = "Content-Disposition,Content-Encoding,Content-Type"
     }
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "azurerm_cdn_endpoint_custom_domain" "web" {
@@ -61,6 +65,10 @@ resource "azurerm_cdn_endpoint_custom_domain" "web" {
     protocol_type    = "ServerNameIndication"
     tls_version      = "TLS12"
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # data1.wwtassets.org
@@ -73,11 +81,15 @@ resource "azurerm_cdn_endpoint" "data1" {
 
   is_compression_enabled = true
   optimization_type      = "GeneralWebDelivery"
-  origin_host_header     = "wwtfiles.blob.core.windows.net"
+  origin_host_header     = azurerm_storage_account.permanent_data_core.primary_blob_host
 
   origin {
     name      = "wwtfiles-blob-core-windows-net"
-    host_name = "wwtfiles.blob.core.windows.net"
+    host_name = azurerm_storage_account.permanent_data_core.primary_blob_host
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -92,6 +104,10 @@ resource "azurerm_cdn_endpoint_custom_domain" "data1" {
     protocol_type    = "ServerNameIndication"
     tls_version      = "TLS12"
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # docs.worldwidetelescope.org
@@ -104,12 +120,16 @@ resource "azurerm_cdn_endpoint" "webdocs" {
 
   is_compression_enabled = true
   optimization_type      = "GeneralWebDelivery"
-  origin_host_header     = "wwtwebstatic.z22.web.core.windows.net"
+  origin_host_header     = azurerm_storage_account.permanent_data_staticweb.primary_web_host
   origin_path            = "/_docs"
 
   origin {
     name      = "wwtwebstatic-z22-web-core-windows-net"
-    host_name = "wwtwebstatic.z22.web.core.windows.net"
+    host_name = azurerm_storage_account.permanent_data_staticweb.primary_web_host
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -124,6 +144,10 @@ resource "azurerm_cdn_endpoint_custom_domain" "webdocs" {
     protocol_type    = "ServerNameIndication"
     tls_version      = "TLS12"
   }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 # embed.worldwidetelescope.org
@@ -136,12 +160,16 @@ resource "azurerm_cdn_endpoint" "embed" {
 
   is_compression_enabled = true
   optimization_type      = "GeneralWebDelivery"
-  origin_host_header     = "wwtwebstatic.z22.web.core.windows.net"
+  origin_host_header     = azurerm_storage_account.permanent_data_staticweb.primary_web_host
   origin_path            = "/_embedui/"
 
   origin {
     name      = "wwtwebstatic-z22-web-core-windows-net"
-    host_name = "wwtwebstatic.z22.web.core.windows.net"
+    host_name = azurerm_storage_account.permanent_data_staticweb.primary_web_host
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -155,6 +183,10 @@ resource "azurerm_cdn_endpoint_custom_domain" "embed" {
     certificate_type = "Dedicated"
     protocol_type    = "ServerNameIndication"
     tls_version      = "TLS12"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -190,9 +222,14 @@ resource "azurerm_cdn_endpoint" "general" {
       value  = "Content-Disposition,Content-Encoding,Content-Type,LiveUserToken"
     }
   }
+
   origin {
     name      = "beta-worldwidetelescope-org"
     host_name = "worldwidetelescope.org"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -206,5 +243,9 @@ resource "azurerm_cdn_endpoint_custom_domain" "general" {
     certificate_type = "Dedicated"
     protocol_type    = "ServerNameIndication"
     tls_version      = "TLS12"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
