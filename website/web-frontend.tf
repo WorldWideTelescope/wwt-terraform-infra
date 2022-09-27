@@ -132,7 +132,7 @@ resource "azurerm_application_gateway" "frontend" {
 
   backend_address_pool {
     name  = "wwtappgw1-core-data-backend"
-    fqdns = [azurerm_app_service.data.default_site_hostname]
+    fqdns = [azurerm_linux_web_app.data.default_hostname]
   }
 
   backend_address_pool {

@@ -318,16 +318,20 @@ resource "azurerm_monitor_autoscale_setting" "data" {
 }
 
 # The main Linux-based data app service.
-resource "azurerm_app_service" "data" {
+resource "azurerm_linux_web_app" "data" {
   name                = "${var.oldPrefix}-data-app"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_plan_id = azurerm_service_plan.data.id
+  service_plan_id     = azurerm_service_plan.data.id
 
   site_config {
     always_on        = true
     app_command_line = ""
-    linux_fx_version = "DOCKER|aasworldwidetelescope/core-data:latest"
+
+    # Added 2022 Sep to match ground truth:
+    ftps_state              = "AllAllowed"
+    scm_minimum_tls_version = "1.0"
+    use_32_bit_worker       = false
   }
 
   app_settings = {
@@ -353,7 +357,7 @@ resource "azurerm_app_service_slot" "data_stage" {
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
   app_service_plan_id = azurerm_service_plan.data.id
-  app_service_name    = azurerm_app_service.data.name
+  app_service_name    = azurerm_linux_web_app.data.name
 
   site_config {
     always_on        = false
@@ -361,7 +365,7 @@ resource "azurerm_app_service_slot" "data_stage" {
     linux_fx_version = "DOCKER|aasworldwidetelescope/core-data:latest"
   }
 
-  app_settings = azurerm_app_service.data.app_settings
+  app_settings = azurerm_linux_web_app.data.app_settings
 
   identity {
     type = "SystemAssigned"
@@ -371,7 +375,7 @@ resource "azurerm_app_service_slot" "data_stage" {
 resource "azurerm_key_vault_access_policy" "data_appservice" {
   key_vault_id       = azurerm_key_vault.coreapp.id
   tenant_id          = data.azurerm_client_config.current.tenant_id
-  object_id          = azurerm_app_service.data.identity.0.principal_id
+  object_id          = azurerm_linux_web_app.data.identity.0.principal_id
   secret_permissions = ["Get", "List"]
 }
 
