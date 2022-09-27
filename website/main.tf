@@ -11,6 +11,13 @@ provider "azurerm" {
 # Store state in WWT's Azure blob storage:
 
 terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 2.41.0"
+    }
+  }
+
   backend "azurerm" {
     resource_group_name  = "devops-support"
     storage_account_name = "wwtdevops"

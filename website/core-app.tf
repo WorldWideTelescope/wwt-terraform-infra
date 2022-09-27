@@ -45,7 +45,6 @@ resource "azurerm_key_vault" "coreapp" {
   location                    = azurerm_resource_group.coreapp.location
   enabled_for_disk_encryption = true
   tenant_id                   = data.azurerm_client_config.current.tenant_id
-  soft_delete_enabled         = true
   purge_protection_enabled    = false
 
   sku_name = "standard"
@@ -59,7 +58,7 @@ resource "azurerm_key_vault_access_policy" "user" {
   key_vault_id       = azurerm_key_vault.coreapp.id
   tenant_id          = data.azurerm_client_config.current.tenant_id
   object_id          = data.azurerm_client_config.current.object_id
-  secret_permissions = ["get", "set", "list", "delete"]
+  secret_permissions = ["Get", "Set", "List", "Delete"]
 }
 
 # Keyvault secrets connecting the apps to the permanent data accounts
@@ -374,14 +373,14 @@ resource "azurerm_key_vault_access_policy" "data_appservice" {
   key_vault_id       = azurerm_key_vault.coreapp.id
   tenant_id          = data.azurerm_client_config.current.tenant_id
   object_id          = azurerm_app_service.data.identity.0.principal_id
-  secret_permissions = ["get", "list"]
+  secret_permissions = ["Get", "List"]
 }
 
 resource "azurerm_key_vault_access_policy" "data_stage_appservice" {
   key_vault_id       = azurerm_key_vault.coreapp.id
   tenant_id          = data.azurerm_client_config.current.tenant_id
   object_id          = azurerm_app_service_slot.data_stage.identity.0.principal_id
-  secret_permissions = ["get", "list"]
+  secret_permissions = ["Get", "List"]
 }
 
 # Separate Linux-based proxy service. This used to be implemented in the core
@@ -570,12 +569,12 @@ resource "azurerm_key_vault_access_policy" "communities_app" {
   key_vault_id       = azurerm_key_vault.coreapp.id
   tenant_id          = data.azurerm_client_config.current.tenant_id
   object_id          = azurerm_app_service.communities.identity.0.principal_id
-  secret_permissions = ["get", "list"]
+  secret_permissions = ["Get", "List"]
 }
 
 resource "azurerm_key_vault_access_policy" "communities_app_stage" {
   key_vault_id       = azurerm_key_vault.coreapp.id
   tenant_id          = data.azurerm_client_config.current.tenant_id
   object_id          = azurerm_app_service_slot.communities_stage.identity.0.principal_id
-  secret_permissions = ["get", "list"]
+  secret_permissions = ["Get", "List"]
 }
