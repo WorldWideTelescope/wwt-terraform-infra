@@ -1,4 +1,4 @@
-# Terraform definitions of WWT's web frontend: the App Gateway, CDN setup, etc.
+# Terraform definitions of WWT's web frontend: the App Gateway etc.
 
 resource "azurerm_resource_group" "web_frontend_legacy" {
   name     = var.legacyNameFrontendGroup
@@ -62,10 +62,8 @@ resource "azurerm_application_gateway" "frontend" {
   }
 
   identity {
-    type = "UserAssigned"
-    # There seems to be a capitalization inconsistency here that doesn't go away
-    # with a `terraform apply`.
-    identity_ids = [replace(azurerm_user_assigned_identity.gateway.id, "resourceGroups", "resourcegroups")]
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.gateway.id]
   }
 
   autoscale_configuration {
@@ -89,23 +87,23 @@ resource "azurerm_application_gateway" "frontend" {
   }
 
   gateway_ip_configuration {
-    name = "appGatewayIpConfig"
+    name      = "appGatewayIpConfig"
     subnet_id = "${azurerm_virtual_network.frontend.id}/subnets/subnet-1"
   }
 
   http_listener {
-    name = "anyhost-http"
+    name                           = "anyhost-http"
     frontend_ip_configuration_name = "appGwPublicFrontendIp"
-    frontend_port_name = "port_80"
-    protocol = "Http"
+    frontend_port_name             = "port_80"
+    protocol                       = "Http"
   }
 
   http_listener {
-    name = "anyhost-https"
+    name                           = "anyhost-https"
     frontend_ip_configuration_name = "appGwPublicFrontendIp"
-    frontend_port_name = "port_443"
-    protocol = "Https"
-    ssl_certificate_name = "anyhost-httpsvaultCert"
+    frontend_port_name             = "port_443"
+    protocol                       = "Https"
+    ssl_certificate_name           = "anyhost-httpsvaultCert"
   }
 
   # Backend address pools
@@ -113,13 +111,13 @@ resource "azurerm_application_gateway" "frontend" {
   backend_address_pool {
     # Although this backend is no longer used, if you try to get rid of it,
     # Terraform gets confused and wants to rewrite all of the other backends.
-    name = "wwtappgw1-vm-backend"
+    name  = "wwtappgw1-vm-backend"
     fqdns = ["10.0.0.4", "10.0.0.5"]
   }
 
   backend_address_pool {
     name  = "wwtappgw1-proxy-backend"
-    fqdns = [azurerm_app_service.core_proxy.default_site_hostname]
+    fqdns = [azurerm_linux_web_app.core_proxy.default_hostname]
   }
 
   backend_address_pool {
@@ -129,29 +127,29 @@ resource "azurerm_application_gateway" "frontend" {
 
   backend_address_pool {
     name  = "wwtappgw1-nginx-core-prod-backend"
-    fqdns = [azurerm_app_service.core_nginx.default_site_hostname]
+    fqdns = [azurerm_linux_web_app.core_nginx.default_hostname]
   }
 
   backend_address_pool {
     name  = "wwtappgw1-core-data-backend"
-    fqdns = [azurerm_app_service.data.default_site_hostname]
+    fqdns = [azurerm_linux_web_app.data.default_hostname]
   }
 
   backend_address_pool {
     name  = "wwtappgw1-core-mvc-backend"
-    fqdns = [azurerm_app_service.communities.default_site_hostname]
+    fqdns = [azurerm_windows_web_app.communities.default_hostname]
   }
 
   # Backend HTTP settings
 
   backend_http_settings {
-    name                                = "webstatic-http-setting"
-    affinity_cookie_name                = "ApplicationGatewayAffinity"
-    cookie_based_affinity               = "Disabled"
-    host_name                           = azurerm_storage_account.permanent_data_staticweb.primary_web_host
-    port                                = 80
-    protocol                            = "Http"
-    request_timeout                     = 20
+    name                  = "webstatic-http-setting"
+    affinity_cookie_name  = "ApplicationGatewayAffinity"
+    cookie_based_affinity = "Disabled"
+    host_name             = azurerm_storage_account.permanent_data_staticweb.primary_web_host
+    port                  = 80
+    protocol              = "Http"
+    request_timeout       = 20
   }
 
   backend_http_settings {
@@ -180,17 +178,19 @@ resource "azurerm_application_gateway" "frontend" {
   # Request routing rules
 
   request_routing_rule {
-    name = "anyhost-https-path-routing"
-    rule_type = "PathBasedRouting"
+    name               = "anyhost-https-path-routing"
+    rule_type          = "PathBasedRouting"
     http_listener_name = "anyhost-https"
-    url_path_map_name = "anyhost-https-path-routing"
+    url_path_map_name  = "anyhost-https-path-routing"
+    priority           = 10020
   }
 
   request_routing_rule {
-    name = "anyhost-http-path-routing"
-    rule_type = "PathBasedRouting"
+    name               = "anyhost-http-path-routing"
+    rule_type          = "PathBasedRouting"
     http_listener_name = "anyhost-http"
-    url_path_map_name = "anyhost-http-path-routing"
+    url_path_map_name  = "anyhost-http-path-routing"
+    priority           = 10010
   }
 
   url_path_map {
@@ -204,7 +204,7 @@ resource "azurerm_application_gateway" "frontend" {
       backend_address_pool_name  = "wwtappgw1-proxy-backend"
       backend_http_settings_name = "rehost-http-setting"
       rewrite_rule_set_name      = "global-cors-and-cache"
-      paths                      = [
+      paths = [
         "/webserviceproxy.aspx",
         "/wwtweb/webserviceproxy.aspx",
       ]
@@ -214,7 +214,7 @@ resource "azurerm_application_gateway" "frontend" {
       name                       = "nginx-core-prod"
       backend_address_pool_name  = "wwtappgw1-nginx-core-prod-backend"
       backend_http_settings_name = "rehost-http-setting"
-      paths                      = [
+      paths = [
         "/docs/*",
         "/getinvolved*",
         "/support*",
@@ -227,7 +227,7 @@ resource "azurerm_application_gateway" "frontend" {
       name                       = "core-data"
       backend_address_pool_name  = "wwtappgw1-core-data-backend"
       backend_http_settings_name = "rehost-http-setting"
-      paths                      = [
+      paths = [
         "/wwtweb/*",
       ]
     }
@@ -236,7 +236,7 @@ resource "azurerm_application_gateway" "frontend" {
       name                       = "core-mvc"
       backend_address_pool_name  = "wwtappgw1-core-mvc-backend"
       backend_http_settings_name = "rehost-http-setting"
-      paths                      = [
+      paths = [
         "/Community*",
         "/Content*",
         "/Entity*",
@@ -257,7 +257,7 @@ resource "azurerm_application_gateway" "frontend" {
       name                       = "static"
       backend_address_pool_name  = "wwtappgw1-static-backend"
       backend_http_settings_name = "webstatic-http-setting"
-      paths                      = [
+      paths = [
         "/about*",
         "/assets/*",
         "/complete*",
@@ -276,7 +276,7 @@ resource "azurerm_application_gateway" "frontend" {
         "/use*",
         "/webclient/*",
       ]
-      rewrite_rule_set_name      = "global-cors-and-cache"
+      rewrite_rule_set_name = "global-cors-and-cache"
     }
   }
 
@@ -290,18 +290,18 @@ resource "azurerm_application_gateway" "frontend" {
       name                       = "proxy-path-rule"
       backend_address_pool_name  = "wwtappgw1-proxy-backend"
       backend_http_settings_name = "rehost-http-setting"
-      paths                      = [
+      paths = [
         "/webserviceproxy.aspx",
         "/wwtweb/webserviceproxy.aspx",
       ]
-      rewrite_rule_set_name      = "global-cors-and-cache"
+      rewrite_rule_set_name = "global-cors-and-cache"
     }
 
     path_rule {
       name                       = "nginx-core-prod"
       backend_address_pool_name  = "wwtappgw1-nginx-core-prod-backend"
       backend_http_settings_name = "rehost-http-setting"
-      paths                      = [
+      paths = [
         "/docs/*",
         "/getinvolved*",
         "/support*",
@@ -314,7 +314,7 @@ resource "azurerm_application_gateway" "frontend" {
       name                       = "core-data"
       backend_address_pool_name  = "wwtappgw1-core-data-backend"
       backend_http_settings_name = "rehost-http-setting"
-      paths                      = [
+      paths = [
         "/wwtweb/*",
       ]
     }
@@ -323,7 +323,7 @@ resource "azurerm_application_gateway" "frontend" {
       name                       = "core-mvc"
       backend_address_pool_name  = "wwtappgw1-core-mvc-backend"
       backend_http_settings_name = "rehost-http-setting"
-      paths                      = [
+      paths = [
         "/Community*",
         "/Content*",
         "/Entity*",
@@ -344,7 +344,7 @@ resource "azurerm_application_gateway" "frontend" {
       name                       = "static"
       backend_address_pool_name  = "wwtappgw1-static-backend"
       backend_http_settings_name = "webstatic-http-setting"
-      paths                      = [
+      paths = [
         "/about*",
         "/assets/*",
         "/complete*",
@@ -363,7 +363,7 @@ resource "azurerm_application_gateway" "frontend" {
         "/use*",
         "/webclient/*",
       ]
-      rewrite_rule_set_name      = "global-cors-and-cache"
+      rewrite_rule_set_name = "global-cors-and-cache"
     }
   }
 

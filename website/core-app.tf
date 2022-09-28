@@ -30,7 +30,7 @@ resource "azurerm_resource_group" "coreapp_linux" {
 #resource "azurerm_role_assignment" "appservice_storage" {
 #  scope                = azurerm_storage_account.datatier.id
 #  role_definition_name = "Storage Blob Data Reader"
-#  principal_id         = azurerm_app_service.communities.identity.0.principal_id
+#  principal_id         = azurerm_windows_web_app.communities.identity.0.principal_id
 #}
 
 # The Key Vault for secrets and app configuration. The web app's
@@ -45,7 +45,6 @@ resource "azurerm_key_vault" "coreapp" {
   location                    = azurerm_resource_group.coreapp.location
   enabled_for_disk_encryption = true
   tenant_id                   = data.azurerm_client_config.current.tenant_id
-  soft_delete_enabled         = true
   purge_protection_enabled    = false
 
   sku_name = "standard"
@@ -56,10 +55,10 @@ resource "azurerm_key_vault" "coreapp" {
 }
 
 resource "azurerm_key_vault_access_policy" "user" {
-  key_vault_id            = azurerm_key_vault.coreapp.id
-  tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = data.azurerm_client_config.current.object_id
-  secret_permissions      = ["get", "set", "list", "delete"]
+  key_vault_id       = azurerm_key_vault.coreapp.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = data.azurerm_client_config.current.object_id
+  secret_permissions = ["Get", "Set", "List", "Delete"]
 }
 
 # Keyvault secrets connecting the apps to the permanent data accounts
@@ -68,12 +67,14 @@ resource "azurerm_key_vault_secret" "corestorage" {
   name         = "AzurePlateFileStorageAccount"
   value        = azurerm_storage_account.permanent_data_core.primary_connection_string
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 }
 
 resource "azurerm_key_vault_secret" "communitystorage" {
   name         = "EarthOnlineStorage"
   value        = azurerm_storage_account.permanent_data_communities.primary_connection_string
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 
   tags = {
     "file-encoding" = "utf-8"
@@ -84,6 +85,7 @@ resource "azurerm_key_vault_secret" "marsstorage" {
   name         = "MarsStorageAccount"
   value        = azurerm_storage_account.permanent_data_mars.primary_connection_string
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 }
 
 resource "azurerm_key_vault_secret" "wwtwebstorage" {
@@ -92,6 +94,7 @@ resource "azurerm_key_vault_secret" "wwtwebstorage" {
   name         = "WWTWebBlobs"
   value        = azurerm_storage_account.permanent_data_wwtweb.primary_connection_string
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 
   tags = {
     "file-encoding" = "utf-8"
@@ -100,33 +103,30 @@ resource "azurerm_key_vault_secret" "wwtwebstorage" {
 
 # SQL databases powering some of the core app functionality.
 
-resource "azurerm_sql_database" "astro_objects" {
-  name                = "AstroObjects"
-  resource_group_name = azurerm_resource_group.permanent_data.name
-  location            = azurerm_resource_group.permanent_data.location
-  server_name         = azurerm_sql_server.permanent_data_wwtcore_db_server.name
+resource "azurerm_mssql_database" "astro_objects" {
+  name      = "AstroObjects"
+  server_id = azurerm_mssql_server.permanent_data_wwtcore_db_server.id
+  sku_name  = "S0"
 
   lifecycle {
     prevent_destroy = true
   }
 }
 
-resource "azurerm_sql_database" "layerscape" {
-  name                = "Layerscape"
-  resource_group_name = azurerm_resource_group.permanent_data.name
-  location            = azurerm_resource_group.permanent_data.location
-  server_name         = azurerm_sql_server.permanent_data_communities_db_server.name
+resource "azurerm_mssql_database" "layerscape" {
+  name      = "Layerscape"
+  server_id = azurerm_mssql_server.permanent_data_communities_db_server.id
+  sku_name  = "S0"
 
   lifecycle {
     prevent_destroy = true
   }
 }
 
-resource "azurerm_sql_database" "tours" {
-  name                = "WWTTours"
-  resource_group_name = azurerm_resource_group.permanent_data.name
-  location            = azurerm_resource_group.permanent_data.location
-  server_name         = azurerm_sql_server.permanent_data_wwtcore_db_server.name
+resource "azurerm_mssql_database" "tours" {
+  name      = "WWTTours"
+  server_id = azurerm_mssql_server.permanent_data_wwtcore_db_server.id
+  sku_name  = "S0"
 
   lifecycle {
     prevent_destroy = true
@@ -135,14 +135,16 @@ resource "azurerm_sql_database" "tours" {
 
 resource "azurerm_key_vault_secret" "layerscapedb" {
   name         = "EarthOnlineEntities"
-  value        = "metadata=res://*/Models.EarthOnline.csdl|res://*/Models.EarthOnline.ssdl|res://*/Models.EarthOnline.msl;provider=System.Data.SqlClient;provider connection string=\"Data Source=${azurerm_sql_server.permanent_data_communities_db_server.fully_qualified_domain_name};Initial Catalog=${azurerm_sql_database.layerscape.name};Integrated Security=False;User ID=${azurerm_sql_server.permanent_data_communities_db_server.administrator_login};Password=${var.layerscapeDbPassword};multipleactiveresultsets=True;App=EntityFramework\""
+  value        = "metadata=res://*/Models.EarthOnline.csdl|res://*/Models.EarthOnline.ssdl|res://*/Models.EarthOnline.msl;provider=System.Data.SqlClient;provider connection string=\"Data Source=${azurerm_mssql_server.permanent_data_communities_db_server.fully_qualified_domain_name};Initial Catalog=${azurerm_mssql_database.layerscape.name};Integrated Security=False;User ID=${azurerm_mssql_server.permanent_data_communities_db_server.administrator_login};Password=${var.layerscapeDbPassword};multipleactiveresultsets=True;App=EntityFramework\""
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 }
 
 resource "azurerm_key_vault_secret" "toursdb" {
   name         = "WWTToursDBConnectionString"
-  value        = "Server=tcp:${azurerm_sql_server.permanent_data_wwtcore_db_server.fully_qualified_domain_name},1433;Database=${azurerm_sql_database.tours.name};User ID=${azurerm_sql_server.permanent_data_wwtcore_db_server.administrator_login}@${azurerm_sql_server.permanent_data_wwtcore_db_server.name};Password=${var.wwttoursDbPassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;"
+  value        = "Server=tcp:${azurerm_mssql_server.permanent_data_wwtcore_db_server.fully_qualified_domain_name},1433;Database=${azurerm_mssql_database.tours.name};User ID=${azurerm_mssql_server.permanent_data_wwtcore_db_server.administrator_login}@${azurerm_mssql_server.permanent_data_wwtcore_db_server.name};Password=${var.wwttoursDbPassword};Trusted_Connection=False;Encrypt=True;Connection Timeout=30;"
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 
   tags = {
     "file-encoding" = "utf-8"
@@ -169,6 +171,7 @@ resource "azurerm_key_vault_secret" "redis" {
   name         = "RedisConnectionString"
   value        = azurerm_redis_cache.wwt.primary_connection_string
   key_vault_id = azurerm_key_vault.coreapp.id
+  content_type = "text/plain"
 
   tags = {
     environment = "Production"
@@ -187,17 +190,12 @@ resource "azurerm_application_insights" "wwt" {
 # App service plan for the Linux-based apps. This includes the
 # core data services.
 
-resource "azurerm_app_service_plan" "data" {
+resource "azurerm_service_plan" "data" {
   name                = "${var.oldPrefix}-data-plan"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  kind                = "Linux"
-  reserved            = true
-
-  sku {
-    tier = "Standard"
-    size = "S1"
-  }
+  os_type             = "Linux"
+  sku_name            = "S1"
 }
 
 # Autoscale rules. Note that if you don't have any scale-down rules, your number
@@ -222,7 +220,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
   name                = "${var.oldPrefix}-data-autoscaling"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  target_resource_id  = azurerm_app_service_plan.data.id
+  target_resource_id  = azurerm_service_plan.data.id
 
   profile {
     name = "defaultProfile"
@@ -237,14 +235,14 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     # if <=50%.
     rule {
       metric_trigger {
-        metric_name = "CpuPercentage"
-        metric_resource_id = azurerm_app_service_plan.data.id
-        statistic = "Average"
-        time_grain = "PT1M"
-        time_aggregation = "Average"
-        time_window = "PT5M"
-        operator = "GreaterThanOrEqual"
-        threshold = 75
+        metric_name        = "CpuPercentage"
+        metric_resource_id = azurerm_service_plan.data.id
+        statistic          = "Average"
+        time_grain         = "PT1M"
+        time_aggregation   = "Average"
+        time_window        = "PT5M"
+        operator           = "GreaterThanOrEqual"
+        threshold          = 75
       }
 
       scale_action {
@@ -257,14 +255,14 @@ resource "azurerm_monitor_autoscale_setting" "data" {
 
     rule {
       metric_trigger {
-        metric_name = "CpuPercentage"
-        metric_resource_id = azurerm_app_service_plan.data.id
-        statistic = "Average"
-        time_grain = "PT1M"
-        time_aggregation = "Average"
-        time_window = "PT5M"
-        operator = "LessThanOrEqual"
-        threshold = 50
+        metric_name        = "CpuPercentage"
+        metric_resource_id = azurerm_service_plan.data.id
+        statistic          = "Average"
+        time_grain         = "PT1M"
+        time_aggregation   = "Average"
+        time_window        = "PT5M"
+        operator           = "LessThanOrEqual"
+        threshold          = 50
       }
 
       scale_action {
@@ -279,14 +277,14 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     # Down if <=2.
     rule {
       metric_trigger {
-        metric_name = "HttpQueueLength"
-        metric_resource_id = azurerm_app_service_plan.data.id
-        statistic = "Average"
-        time_grain = "PT1M"
-        time_aggregation = "Average"
-        time_window = "PT5M"
-        operator = "GreaterThanOrEqual"
-        threshold = 10
+        metric_name        = "HttpQueueLength"
+        metric_resource_id = azurerm_service_plan.data.id
+        statistic          = "Average"
+        time_grain         = "PT1M"
+        time_aggregation   = "Average"
+        time_window        = "PT5M"
+        operator           = "GreaterThanOrEqual"
+        threshold          = 10
       }
 
       scale_action {
@@ -299,14 +297,14 @@ resource "azurerm_monitor_autoscale_setting" "data" {
 
     rule {
       metric_trigger {
-        metric_name = "HttpQueueLength"
-        metric_resource_id = azurerm_app_service_plan.data.id
-        statistic = "Average"
-        time_grain = "PT1M"
-        time_aggregation = "Average"
-        time_window = "PT5M"
-        operator = "LessThanOrEqual"
-        threshold = 2
+        metric_name        = "HttpQueueLength"
+        metric_resource_id = azurerm_service_plan.data.id
+        statistic          = "Average"
+        time_grain         = "PT1M"
+        time_aggregation   = "Average"
+        time_window        = "PT5M"
+        operator           = "LessThanOrEqual"
+        threshold          = 2
       }
 
       scale_action {
@@ -320,25 +318,30 @@ resource "azurerm_monitor_autoscale_setting" "data" {
 }
 
 # The main Linux-based data app service.
-resource "azurerm_app_service" "data" {
+resource "azurerm_linux_web_app" "data" {
   name                = "${var.oldPrefix}-data-app"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_plan_id = azurerm_app_service_plan.data.id
+  service_plan_id     = azurerm_service_plan.data.id
+  # Docker container: aasworldwidetelescope/core-data:latest
 
   site_config {
-    always_on = true
+    always_on        = true
     app_command_line = ""
-    linux_fx_version = "DOCKER|aasworldwidetelescope/core-data:latest"
+
+    # Added 2022 Sep to match ground truth:
+    ftps_state              = "AllAllowed"
+    scm_minimum_tls_version = "1.0"
+    use_32_bit_worker       = false
   }
 
   app_settings = {
-    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
-    "DOCKER_REGISTRY_SERVER_URL" = "https://index.docker.io"
-    "KeyVaultName" = azurerm_key_vault.coreapp.name
-    "SlidingExpiration" = "30.00:00:00" # default to 30 days to keep cached items
-    "UseAzurePlateFiles" = "true"
-    "UseCaching" = "true"
+    "APPINSIGHTS_INSTRUMENTATIONKEY"      = azurerm_application_insights.wwt.instrumentation_key
+    "DOCKER_REGISTRY_SERVER_URL"          = "https://index.docker.io"
+    "KeyVaultName"                        = azurerm_key_vault.coreapp.name
+    "SlidingExpiration"                   = "30.00:00:00" # default to 30 days to keep cached items
+    "UseAzurePlateFiles"                  = "true"
+    "UseCaching"                          = "true"
     "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
   }
 
@@ -350,20 +353,22 @@ resource "azurerm_app_service" "data" {
 # "stage" slot identical but not always_on. Note that most config/settings
 # swap when you swap deployment slots, so this slot and production must
 # be kept in sync. Fortunately the always_on setting stays put.
-resource "azurerm_app_service_slot" "data_stage" {
-  name                = "stage"
-  location            = azurerm_resource_group.coreapp_linux.location
-  resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_plan_id = azurerm_app_service_plan.data.id
-  app_service_name    = azurerm_app_service.data.name
+resource "azurerm_linux_web_app_slot" "data_stage" {
+  name           = "stage"
+  app_service_id = azurerm_linux_web_app.data.id
+  # Docker container: aasworldwidetelescope/core-data:latest
 
   site_config {
-    always_on = false
+    always_on        = false
     app_command_line = ""
-    linux_fx_version = "DOCKER|aasworldwidetelescope/core-data:latest"
+
+    # Added 2022 Sep to match ground truth:
+    ftps_state              = "AllAllowed"
+    scm_minimum_tls_version = "1.0"
+    use_32_bit_worker       = false
   }
 
-  app_settings = azurerm_app_service.data.app_settings
+  app_settings = azurerm_linux_web_app.data.app_settings
 
   identity {
     type = "SystemAssigned"
@@ -371,33 +376,50 @@ resource "azurerm_app_service_slot" "data_stage" {
 }
 
 resource "azurerm_key_vault_access_policy" "data_appservice" {
-  key_vault_id            = azurerm_key_vault.coreapp.id
-  tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = azurerm_app_service.data.identity.0.principal_id
-  secret_permissions      = ["get", "list"]
+  key_vault_id       = azurerm_key_vault.coreapp.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = azurerm_linux_web_app.data.identity.0.principal_id
+  secret_permissions = ["Get", "List"]
 }
 
 resource "azurerm_key_vault_access_policy" "data_stage_appservice" {
-  key_vault_id            = azurerm_key_vault.coreapp.id
-  tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = azurerm_app_service_slot.data_stage.identity.0.principal_id
-  secret_permissions      = ["get", "list"]
+  key_vault_id       = azurerm_key_vault.coreapp.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = azurerm_linux_web_app_slot.data_stage.identity.0.principal_id
+  secret_permissions = ["Get", "List"]
 }
 
 # Separate Linux-based proxy service. This used to be implemented in the core
 # apps. It's essentially standalone, but does get mixed into the /wwtweb/ URL
 # hierarchy.
 
-resource "azurerm_app_service" "core_proxy" {
+resource "azurerm_linux_web_app" "core_proxy" {
   name                = "${var.prefix}-coreproxy"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_plan_id = azurerm_app_service_plan.data.id
+  service_plan_id     = azurerm_service_plan.data.id
+  # Docker container: aasworldwidetelescope/proxy:latest"
 
   site_config {
-    always_on = false
+    always_on        = false
     app_command_line = ""
-    linux_fx_version = "DOCKER|aasworldwidetelescope/proxy:latest"
+
+    # Added 2022 Sep to match ground truth:
+    ftps_state              = "AllAllowed"
+    scm_minimum_tls_version = "1.0"
+    use_32_bit_worker       = false
+  }
+
+  logs {
+    detailed_error_messages = false
+    failed_request_tracing  = false
+
+    http_logs {
+      file_system {
+        retention_in_days = 14
+        retention_in_mb   = 35
+      }
+    }
   }
 
   lifecycle {
@@ -409,27 +431,34 @@ resource "azurerm_app_service" "core_proxy" {
 # random worldwidetelescope.org URLs, but also handles some miscellaneous web
 # traffic. The setup for those custom domains turns out to be quite tedious!
 
-resource "azurerm_app_service" "core_nginx" {
+resource "azurerm_linux_web_app" "core_nginx" {
   name                = "${var.prefix}-corenginx"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_plan_id = azurerm_app_service_plan.data.id
+  service_plan_id     = azurerm_service_plan.data.id
+  # Docker container: aasworldwidetelescope/nginx-core:latest
 
   app_settings = {
-    "PUBLIC_FACING_DOMAIN_NAME" = "worldwidetelescope.org"
+    "PUBLIC_FACING_DOMAIN_NAME"  = "worldwidetelescope.org"
+    "DOCKER_ENABLE_CI"           = "true"
+    "DOCKER_REGISTRY_SERVER_URL" = "https://index.docker.io/v1"
   }
 
   site_config {
-    always_on = false
+    always_on        = false
     app_command_line = ""
-    linux_fx_version = "DOCKER|aasworldwidetelescope/nginx-core:latest"
+
+    # Added 2022 Sep to match ground truth:
+    ftps_state              = "AllAllowed"
+    scm_minimum_tls_version = "1.0"
+    use_32_bit_worker       = false
   }
 }
 
 resource "azurerm_app_service_custom_hostname_binding" "core_nginx_binder_wwtforum_org" {
   hostname            = "binder.wwt-forum.org"
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_name    = azurerm_app_service.core_nginx.name
+  app_service_name    = azurerm_linux_web_app.core_nginx.name
 
   # These are managed through the cert binding:
   lifecycle {
@@ -450,7 +479,7 @@ resource "azurerm_app_service_certificate_binding" "core_nginx_binder_wwtforum_o
 resource "azurerm_app_service_custom_hostname_binding" "core_nginx_forum_wwto" {
   hostname            = "forum.worldwidetelescope.org"
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_name    = azurerm_app_service.core_nginx.name
+  app_service_name    = azurerm_linux_web_app.core_nginx.name
 
   lifecycle {
     ignore_changes = [ssl_state, thumbprint]
@@ -470,7 +499,7 @@ resource "azurerm_app_service_certificate_binding" "core_nginx_forum_wwto" {
 resource "azurerm_app_service_custom_hostname_binding" "core_nginx_forums_wwto" {
   hostname            = "forums.worldwidetelescope.org"
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_name    = azurerm_app_service.core_nginx.name
+  app_service_name    = azurerm_linux_web_app.core_nginx.name
 
   lifecycle {
     ignore_changes = [ssl_state, thumbprint]
@@ -498,7 +527,7 @@ resource "azurerm_app_service_certificate_binding" "core_nginx_forums_wwto" {
 resource "azurerm_app_service_custom_hostname_binding" "core_nginx_wwtassets_org" {
   hostname            = "wwtassets.org"
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  app_service_name    = azurerm_app_service.core_nginx.name
+  app_service_name    = azurerm_linux_web_app.core_nginx.name
 
   lifecycle {
     ignore_changes = [ssl_state, thumbprint]
@@ -507,59 +536,110 @@ resource "azurerm_app_service_custom_hostname_binding" "core_nginx_wwtassets_org
 
 # App service plan for the Windows-based app(s). At the moment this
 # is only the Communities functionality.
-resource "azurerm_app_service_plan" "communities" {
+resource "azurerm_service_plan" "communities" {
   name                = "${var.oldPrefix}-app-service-plan"
   location            = azurerm_resource_group.coreapp.location
   resource_group_name = azurerm_resource_group.coreapp.name
-
-  sku {
-    tier = "Standard"
-    size = "S1"
-  }
+  os_type             = "Windows"
+  sku_name            = "S1"
 }
 
 # The Windows-based Communities app service.
-resource "azurerm_app_service" "communities" {
-  name                = "${var.oldPrefix}-app-service"
-  location            = azurerm_resource_group.coreapp.location
-  resource_group_name = azurerm_resource_group.coreapp.name
-  app_service_plan_id = azurerm_app_service_plan.communities.id
+resource "azurerm_windows_web_app" "communities" {
+  name                    = "${var.oldPrefix}-app-service"
+  location                = azurerm_resource_group.coreapp.location
+  resource_group_name     = azurerm_resource_group.coreapp.name
+  service_plan_id         = azurerm_service_plan.communities.id
+  client_certificate_mode = "Required"
 
   site_config {
     always_on = true
-    dotnet_framework_version = "v4.0"
+
+    application_stack {
+      current_stack  = "dotnet"
+      dotnet_version = "v4.0"
+    }
+
+    # Added to reflect ground truth, 2022-Sep:
+    ftps_state              = "AllAllowed"
+    scm_minimum_tls_version = "1.0"
+    use_32_bit_worker       = false
   }
 
   app_settings = {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
     #"AzurePlateFileStorageAccount" = azurerm_storage_account.datatier.primary_blob_endpoint
-    "KeyVaultName" = azurerm_key_vault.coreapp.name
-    "LiveClientId" = var.liveClientId
+    "KeyVaultName"             = azurerm_key_vault.coreapp.name
+    "LiveClientId"             = var.liveClientId
     "LiveClientRedirectUrlMap" = var.liveClientRedirectUrlMap
-    "LiveClientSecret" = var.liveClientSecret
-    "SlidingExpiration" = "30.00:00:00" # default to 30 days to keep cached items
-    "UseAzurePlateFiles" = "true"
-    "UseCaching" = "true"
+    "LiveClientSecret"         = var.liveClientSecret
+    "SlidingExpiration"        = "30.00:00:00" # default to 30 days to keep cached items
+    "UseAzurePlateFiles"       = "true"
+    "UseCaching"               = "true"
+  }
+
+  logs {
+    detailed_error_messages = true
+    failed_request_tracing  = true
+
+    http_logs {
+      azure_blob_storage {
+        retention_in_days = 180
+        sas_url           = var.appLogSasUrl
+      }
+    }
   }
 
   identity {
     type = "SystemAssigned"
   }
+
+  # Added to reflect ground truth, 2022-Sep:
+  sticky_settings {
+    app_setting_names = [
+      "APPINSIGHTS_PROFILERFEATURE_VERSION",
+      "APPINSIGHTS_SNAPSHOTFEATURE_VERSION",
+      "APPLICATIONINSIGHTS_CONNECTION_STRING ",
+      "ApplicationInsightsAgent_EXTENSION_VERSION",
+      "DiagnosticServices_EXTENSION_VERSION",
+      "InstrumentationEngine_EXTENSION_VERSION",
+      "LiveClientRedirectUrl",
+      "SnapshotDebugger_EXTENSION_VERSION",
+      "XDT_MicrosoftApplicationInsights_BaseExtensions",
+      "XDT_MicrosoftApplicationInsights_Mode",
+      "XDT_MicrosoftApplicationInsights_PreemptSdk",
+    ]
+  }
 }
 
-resource "azurerm_app_service_slot" "communities_stage" {
-  name                = "stage"
-  location            = azurerm_resource_group.coreapp.location
-  resource_group_name = azurerm_resource_group.coreapp.name
-  app_service_plan_id = azurerm_app_service_plan.communities.id
-  app_service_name    = azurerm_app_service.communities.name
+resource "azurerm_windows_web_app_slot" "communities_stage" {
+  name           = "stage"
+  app_service_id = azurerm_windows_web_app.communities.id
 
   site_config {
     always_on = false
-    dotnet_framework_version = "v4.0"
+
+    application_stack {
+      current_stack  = "dotnet"
+      dotnet_version = "v4.0"
+    }
+
+    # Added to reflect ground truth, 2022-Sep:
+    ftps_state              = "AllAllowed"
+    scm_minimum_tls_version = "1.0"
+    virtual_application {
+      physical_path = "site\\wwwroot"
+      preload       = false
+      virtual_path  = "/"
+    }
   }
 
-  app_settings = azurerm_app_service.communities.app_settings
+  app_settings = azurerm_windows_web_app.communities.app_settings
+
+  logs {
+    detailed_error_messages = true
+    failed_request_tracing  = true
+  }
 
   identity {
     type = "SystemAssigned"
@@ -567,15 +647,15 @@ resource "azurerm_app_service_slot" "communities_stage" {
 }
 
 resource "azurerm_key_vault_access_policy" "communities_app" {
-  key_vault_id            = azurerm_key_vault.coreapp.id
-  tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = azurerm_app_service.communities.identity.0.principal_id
-  secret_permissions      = ["get", "list"]
+  key_vault_id       = azurerm_key_vault.coreapp.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = azurerm_windows_web_app.communities.identity.0.principal_id
+  secret_permissions = ["Get", "List"]
 }
 
 resource "azurerm_key_vault_access_policy" "communities_app_stage" {
-  key_vault_id            = azurerm_key_vault.coreapp.id
-  tenant_id               = data.azurerm_client_config.current.tenant_id
-  object_id               = azurerm_app_service_slot.communities_stage.identity.0.principal_id
-  secret_permissions      = ["get", "list"]
+  key_vault_id       = azurerm_key_vault.coreapp.id
+  tenant_id          = data.azurerm_client_config.current.tenant_id
+  object_id          = azurerm_windows_web_app_slot.communities_stage.identity.0.principal_id
+  secret_permissions = ["Get", "List"]
 }

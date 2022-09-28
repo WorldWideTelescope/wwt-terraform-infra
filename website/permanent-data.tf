@@ -19,6 +19,7 @@ resource "azurerm_storage_account" "permanent_data_core" {
   account_tier              = "Standard"
   account_replication_type  = "GRS"
   enable_https_traffic_only = false
+  min_tls_version           = "TLS1_0" # added to reflect ground truth 2022-Sep
 
   lifecycle {
     prevent_destroy = true
@@ -34,6 +35,7 @@ resource "azurerm_storage_account" "permanent_data_wwtweb" {
   account_tier              = "Standard"
   account_replication_type  = "GRS"
   enable_https_traffic_only = false
+  min_tls_version           = "TLS1_0" # added to reflect ground truth 2022-Sep
 
   lifecycle {
     prevent_destroy = true
@@ -49,6 +51,7 @@ resource "azurerm_storage_account" "permanent_data_communities" {
   account_tier              = "Standard"
   account_replication_type  = "LRS"
   enable_https_traffic_only = false
+  min_tls_version           = "TLS1_0" # added to reflect ground truth 2022-Sep
 
   lifecycle {
     prevent_destroy = true
@@ -64,6 +67,7 @@ resource "azurerm_storage_account" "permanent_data_staticweb" {
   account_tier              = "Standard"
   account_replication_type  = "RAGRS"
   enable_https_traffic_only = false
+  min_tls_version           = "TLS1_0" # added to reflect ground truth 2022-Sep
 
   static_website {
     error_404_document = "404.html"
@@ -83,6 +87,7 @@ resource "azurerm_storage_account" "permanent_data_mars" {
   account_tier              = "Standard"
   account_replication_type  = "LRS"
   enable_https_traffic_only = false
+  min_tls_version           = "TLS1_0" # added to reflect ground truth 2022-Sep
 
   lifecycle {
     prevent_destroy = true
@@ -90,13 +95,15 @@ resource "azurerm_storage_account" "permanent_data_mars" {
 }
 
 // The "wwtcore" database server hosts the AstroObjects and WWTTours databases.
-resource "azurerm_sql_server" "permanent_data_wwtcore_db_server" {
-  name                         = var.legacyNameWwtcoreDBServer
-  resource_group_name          = azurerm_resource_group.permanent_data.name
-  location                     = azurerm_resource_group.permanent_data.location
-  version                      = "12.0"
-  administrator_login          = "wwtuser"
-  administrator_login_password = var.wwtcoreDbAdminPassword
+resource "azurerm_mssql_server" "permanent_data_wwtcore_db_server" {
+  name                          = var.legacyNameWwtcoreDBServer
+  resource_group_name           = azurerm_resource_group.permanent_data.name
+  location                      = azurerm_resource_group.permanent_data.location
+  version                       = "12.0"
+  administrator_login           = "wwtuser"
+  administrator_login_password  = var.wwtcoreDbAdminPassword
+  minimum_tls_version           = "Disabled"
+  public_network_access_enabled = false
 
   lifecycle {
     prevent_destroy = true
@@ -104,13 +111,14 @@ resource "azurerm_sql_server" "permanent_data_wwtcore_db_server" {
 }
 
 // The "communities" database server hosts the Layerscape database.
-resource "azurerm_sql_server" "permanent_data_communities_db_server" {
+resource "azurerm_mssql_server" "permanent_data_communities_db_server" {
   name                         = var.legacyNameCommunitiesDBServer
   resource_group_name          = azurerm_resource_group.permanent_data.name
   location                     = azurerm_resource_group.permanent_data.location
   version                      = "12.0"
   administrator_login          = "wwtprod"
   administrator_login_password = var.communitiesDbAdminPassword
+  minimum_tls_version          = "Disabled"
 
   lifecycle {
     prevent_destroy = true
