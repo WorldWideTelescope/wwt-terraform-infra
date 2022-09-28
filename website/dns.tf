@@ -63,16 +63,6 @@ resource "azurerm_dns_cname_record" "embed" {
   record              = azurerm_cdn_endpoint.embed.fqdn
 }
 
-# Tour contest website
-
-resource "azurerm_dns_a_record" "contest" {
-  name                = "contest"
-  zone_name           = azurerm_dns_zone.flagship.name
-  resource_group_name = azurerm_dns_zone.flagship.resource_group_name
-  ttl                 = 3600
-  records             = ["52.149.174.223"]
-}
-
 # StarHunt project (Jonathan Tan group)
 
 resource "azurerm_dns_cname_record" "starhunt" {
