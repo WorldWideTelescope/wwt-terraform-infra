@@ -37,6 +37,27 @@ resource "azurerm_cosmosdb_account" "cx_backend" {
   }
 }
 
+# The app
+
+resource "azurerm_linux_web_app" "cx_backend" {
+  name                = "${var.prefix}-cxbe"
+  location            = azurerm_resource_group.cx_backend.location
+  resource_group_name = azurerm_resource_group.cx_backend.name
+  service_plan_id     = azurerm_service_plan.cx_backend.id
+
+  app_settings = {
+    "AZURE_COSMOS_CONNECTIONSTRING" = azurerm_cosmosdb_account.cx_backend.connection_strings[0]
+  }
+
+  site_config {
+    always_on = false
+    ftps_state = "FtpsOnly"
+    vnet_route_all_enabled = true
+  }
+
+  virtual_network_subnet_id = azurerm_subnet.cx_backend_app.id
+}
+
 # App service plan
 
 resource "azurerm_service_plan" "cx_backend" {
@@ -76,6 +97,25 @@ resource "azurerm_subnet" "cx_backend_app" {
       name    = "Microsoft.Web/serverFarms"
       actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
     }
+  }
+}
+
+resource "azurerm_private_endpoint" "cx_backend" {
+  name                = "${var.prefix}-cxbeDbEndpoint"
+  location            = azurerm_resource_group.cx_backend.location
+  resource_group_name = azurerm_resource_group.cx_backend.name
+  subnet_id           = azurerm_subnet.cx_backend_main.id
+
+  private_dns_zone_group {
+    name = "default"
+    private_dns_zone_ids = [azurerm_private_dns_zone.cx_backend.id]
+  }
+
+  private_service_connection {
+    name                           = "${var.prefix}-cxbeDbEndpoint"
+    private_connection_resource_id = replace(azurerm_cosmosdb_account.cx_backend.id, "DocumentDB", "DocumentDb")
+    is_manual_connection = false
+    subresource_names = ["MongoDB"]
   }
 }
 
