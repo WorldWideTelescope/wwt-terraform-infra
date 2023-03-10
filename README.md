@@ -24,3 +24,10 @@ Directory structure:
 
 The eventual goal is to merge these two, and have the distinctions entirely
 subsumed into the `.tfvars` files, but that is unlikely to happen anytime soon.
+
+To update the Terraform provider version:
+
+- Remove `.terraform.lock.hcl`
+- Update minimum version in the `main.tf` file
+- Run `terraform init`
+- Run `terraform (plan|apply) -var-file=prod.tfvars -refresh-only`
