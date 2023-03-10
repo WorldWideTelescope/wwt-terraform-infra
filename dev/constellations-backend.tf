@@ -9,6 +9,34 @@ resource "azurerm_resource_group" "cx_backend" {
   }
 }
 
+# The CosmosDB/MongoDB server
+
+resource "azurerm_cosmosdb_account" "cx_backend" {
+  name                = "${var.prefix}-cxbe-server"
+  location            = azurerm_resource_group.cx_backend.location
+  resource_group_name = azurerm_resource_group.cx_backend.name
+  offer_type          = "Standard"
+  kind                = "MongoDB"
+
+  geo_location {
+    location          = azurerm_resource_group.cx_backend.location
+    failover_priority = 0
+  }
+
+  consistency_policy {
+    consistency_level       = "Session"
+    max_interval_in_seconds = 5
+    max_staleness_prefix    = 100
+  }
+
+  tags = {
+    # These might not be important, but were auto-assigned when I created this
+    # resource with Microsoft's template.
+    defaultExperience       = "Azure Cosmos DB for MongoDB API"
+    hidden-cosmos-mmspecial = ""
+  }
+}
+
 # App service plan
 
 resource "azurerm_service_plan" "cx_backend" {
