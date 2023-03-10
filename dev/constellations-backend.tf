@@ -78,3 +78,36 @@ resource "azurerm_subnet" "cx_backend_app" {
     }
   }
 }
+
+# Private DNS Zone for the app and the DB to talk
+
+resource "azurerm_private_dns_zone" "cx_backend" {
+  name                = "privatelink.mongo.cosmos.azure.com"
+  resource_group_name = azurerm_resource_group.cx_backend.name
+}
+
+resource "azurerm_private_dns_a_record" "cx_backend_server" {
+  name                = "${var.prefix}-cxbe-server"
+  zone_name           = azurerm_private_dns_zone.cx_backend.name
+  resource_group_name = azurerm_resource_group.cx_backend.name
+  ttl                 = 10
+  records             = ["10.0.0.4"]
+
+  tags = {
+    # More inherited tags that presumably don't matter
+    creator = "created by private endpoint wwtdev-cxbeDbEndpoint with resource guid 00435c8a-487f-4301-810d-ed3ce8ab0fdf"
+  }
+}
+
+resource "azurerm_private_dns_a_record" "cx_backend_server_loc" {
+  name                = "${var.prefix}-cxbe-server-${azurerm_resource_group.cx_backend.location}"
+  zone_name           = azurerm_private_dns_zone.cx_backend.name
+  resource_group_name = azurerm_resource_group.cx_backend.name
+  ttl                 = 10
+  records             = ["10.0.0.5"]
+
+  tags = {
+    # More inherited tags that presumably don't matter
+    creator = "created by private endpoint wwtdev-cxbeDbEndpoint with resource guid 00435c8a-487f-4301-810d-ed3ce8ab0fdf"
+  }
+}
