@@ -53,6 +53,7 @@ resource "azurerm_linux_web_app" "cx_backend" {
     always_on = false
     ftps_state = "FtpsOnly"
     vnet_route_all_enabled = true
+    app_command_line = "yarn start"
   }
 
   virtual_network_subnet_id = azurerm_subnet.cx_backend_app.id
