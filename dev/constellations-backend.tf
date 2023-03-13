@@ -58,6 +58,37 @@ resource "azurerm_linux_web_app" "cx_backend" {
   virtual_network_subnet_id = azurerm_subnet.cx_backend_app.id
 }
 
+# Public custom hostname for the backend app
+
+resource "azurerm_dns_cname_record" "api" {
+  name                = "api"
+  resource_group_name = azurerm_dns_zone.flagship.resource_group_name  # must be same as the zone
+  zone_name           = azurerm_dns_zone.flagship.name
+  ttl                 = 3600
+  record              = "${azurerm_linux_web_app.cx_backend.default_hostname}."
+}
+
+resource "azurerm_app_service_custom_hostname_binding" "cx_backend" {
+  hostname            = "api.${var.tld}"
+  resource_group_name = azurerm_resource_group.cx_backend.name
+  app_service_name    = azurerm_linux_web_app.cx_backend.name
+
+  # These are managed through the cert binding:
+  lifecycle {
+    ignore_changes = [ssl_state, thumbprint]
+  }
+}
+
+resource "azurerm_app_service_managed_certificate" "cx_backend" {
+  custom_hostname_binding_id = azurerm_app_service_custom_hostname_binding.cx_backend.id
+}
+
+resource "azurerm_app_service_certificate_binding" "cx_backend" {
+  hostname_binding_id = azurerm_app_service_custom_hostname_binding.cx_backend.id
+  certificate_id      = azurerm_app_service_managed_certificate.cx_backend.id
+  ssl_state           = "SniEnabled"
+}
+
 # App service plan
 
 resource "azurerm_service_plan" "cx_backend" {
