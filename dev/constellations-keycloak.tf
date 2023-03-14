@@ -28,7 +28,7 @@ resource "azurerm_postgresql_database" "keycloak" {
   resource_group_name = azurerm_resource_group.cx_backend.name
   server_name         = azurerm_postgresql_server.cxsql.name
   charset             = "UTF8"
-  collation           = "English_United States"
+  collation           = "English_United States.1252"
 }
 
 # The Keycloak web app
@@ -41,6 +41,7 @@ resource "azurerm_linux_web_app" "keycloak" {
 
   app_settings = {
     "DOCKER_REGISTRY_SERVER_URL" = "https://index.docker.io/v1"
+    "KEYCLOAK_FRONTEND_URL"      = "https://${var.prefix}-keycloak.azurewebsites.net/auth"
     "KEYCLOAK_USER"              = "wwtadmin"
     "KEYCLOAK_PASSWORD"          = var.cxkeycloakAdminPassword
     "DB_VENDOR"                  = "postgres"
@@ -48,7 +49,10 @@ resource "azurerm_linux_web_app" "keycloak" {
     "DB_USER"                    = "psqladmin@${var.prefix}-cxsql"
     "DB_PASSWORD"                = var.cxsqlAdminPassword
     "JDBC_PARAMS"                = "sslmode=prefer&sslrootcert=/etc/ssl/certs/ca-bundle.crt"
+    "PROXY_ADDRESS_FORWARDING"   = "true"
   }
+
+  https_only = true
 
   site_config {
     always_on              = false
