@@ -40,7 +40,10 @@ resource "azurerm_dns_a_record" "cx_root" {
   resource_group_name = azurerm_dns_zone.flagship.resource_group_name  # must be same as the zone
   zone_name           = azurerm_dns_zone.flagship.name
   ttl                 = 3600
-  records             = azurerm_linux_web_app.cx_frontend.outbound_ip_address_list
+
+  # This feels pretty sketchy but it looks like we need to use the "virtual IP"
+  # which right now is the last element of the outbound IP list.
+  records = [azurerm_linux_web_app.cx_frontend.outbound_ip_address_list[length(azurerm_linux_web_app.cx_frontend.outbound_ip_address_list) - 1]]
 }
 
 resource "azurerm_dns_txt_record" "cx_root_verify" {
