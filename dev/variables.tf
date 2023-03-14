@@ -17,4 +17,10 @@ variable "tld" {
 
 variable "cxsqlAdminPassword" {
   description = "The administrator password for the Constellations PostgreSQL database"
+  sensitive   = true
+}
+
+variable "cxkeycloakAdminPassword" {
+  description = "The administrator password for the Constellations Keycloak server"
+  sensitive   = true
 }

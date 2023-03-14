@@ -158,6 +158,13 @@ resource "azurerm_private_dns_zone" "cx_backend" {
   resource_group_name = azurerm_resource_group.cx_backend.name
 }
 
+resource "azurerm_private_dns_zone_virtual_network_link" "cx_backend" {
+  name                  = "privatelink.mongo.cosmos.azure.com-dblink"
+  resource_group_name   = azurerm_resource_group.cx_backend.name
+  private_dns_zone_name = azurerm_private_dns_zone.cx_backend.name
+  virtual_network_id    = azurerm_virtual_network.cx_backend.id
+}
+
 resource "azurerm_private_dns_a_record" "cx_backend_server" {
   name                = "${var.prefix}-cxbe-server"
   zone_name           = azurerm_private_dns_zone.cx_backend.name
