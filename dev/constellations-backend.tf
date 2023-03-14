@@ -50,10 +50,10 @@ resource "azurerm_linux_web_app" "cx_backend" {
   }
 
   site_config {
-    always_on = false
-    ftps_state = "FtpsOnly"
+    always_on              = false
+    ftps_state             = "FtpsOnly"
     vnet_route_all_enabled = true
-    app_command_line = "yarn start"
+    app_command_line       = "yarn start"
   }
 
   virtual_network_subnet_id = azurerm_subnet.cx_backend_app.id
@@ -63,7 +63,7 @@ resource "azurerm_linux_web_app" "cx_backend" {
 
 resource "azurerm_dns_cname_record" "api" {
   name                = "api"
-  resource_group_name = azurerm_dns_zone.flagship.resource_group_name  # must be same as the zone
+  resource_group_name = azurerm_dns_zone.flagship.resource_group_name # must be same as the zone
   zone_name           = azurerm_dns_zone.flagship.name
   ttl                 = 3600
   record              = "${azurerm_linux_web_app.cx_backend.default_hostname}."
@@ -93,7 +93,7 @@ resource "azurerm_app_service_certificate_binding" "cx_backend" {
 # App service plan
 
 resource "azurerm_service_plan" "cx_backend" {
-  name                = "ASP-${var.prefix}cxbackend-ba6b"  # XXX aligning with autocreated
+  name                = "ASP-${var.prefix}cxbackend-ba6b" # XXX aligning with autocreated
   resource_group_name = azurerm_resource_group.cx_backend.name
   location            = azurerm_resource_group.cx_backend.location
   os_type             = "Linux"
@@ -139,15 +139,15 @@ resource "azurerm_private_endpoint" "cx_backend" {
   subnet_id           = azurerm_subnet.cx_backend_main.id
 
   private_dns_zone_group {
-    name = "default"
+    name                 = "default"
     private_dns_zone_ids = [azurerm_private_dns_zone.cx_backend.id]
   }
 
   private_service_connection {
     name                           = "${var.prefix}-cxbeDbEndpoint"
     private_connection_resource_id = replace(azurerm_cosmosdb_account.cx_backend.id, "DocumentDB", "DocumentDb")
-    is_manual_connection = false
-    subresource_names = ["MongoDB"]
+    is_manual_connection           = false
+    subresource_names              = ["MongoDB"]
   }
 }
 
