@@ -14,3 +14,7 @@ variable "location" {
 variable "tld" {
   description = "The top-level domain of the website"
 }
+
+variable "cxsqlAdminPassword" {
+  description = "The administrator password for the Constellations PostgreSQL database"
+}
