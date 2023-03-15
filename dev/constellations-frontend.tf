@@ -21,6 +21,10 @@ resource "azurerm_linux_web_app" "cx_frontend" {
   resource_group_name = azurerm_resource_group.cx_frontend.name
   service_plan_id     = azurerm_service_plan.cx_backend.id
 
+  app_settings = {
+    "NUXT_PUBLIC_KEYCLOAK_URL" = "https://${azurerm_linux_web_app.keycloak.default_hostname}/auth"
+  }
+
   site_config {
     always_on  = false
     ftps_state = "FtpsOnly"
