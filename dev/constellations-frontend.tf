@@ -22,7 +22,7 @@ resource "azurerm_linux_web_app" "cx_frontend" {
   service_plan_id     = azurerm_service_plan.cx_backend.id
 
   site_config {
-    always_on = false
+    always_on  = false
     ftps_state = "FtpsOnly"
 
     # A funky custom start command is needed because our Zip-based deployment
@@ -37,7 +37,7 @@ resource "azurerm_linux_web_app" "cx_frontend" {
 
 resource "azurerm_dns_a_record" "cx_root" {
   name                = "@"
-  resource_group_name = azurerm_dns_zone.flagship.resource_group_name  # must be same as the zone
+  resource_group_name = azurerm_dns_zone.flagship.resource_group_name # must be same as the zone
   zone_name           = azurerm_dns_zone.flagship.name
   ttl                 = 3600
 
