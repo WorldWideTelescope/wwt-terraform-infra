@@ -74,13 +74,13 @@ resource "azurerm_application_gateway" "frontend" {
     protocol                       = "Http"
   }
 
-  # http_listener {
-  #   name                           = "anyhost_https"
-  #   frontend_ip_configuration_name = "public"
-  #   frontend_port_name             = "port_443"
-  #   protocol                       = "Https"
-  #   ssl_certificate_name           = "anyhost_httpsvaultCert"
-  # }
+  http_listener {
+    name                           = "anyhost_https"
+    frontend_ip_configuration_name = "public"
+    frontend_port_name             = "port_443"
+    protocol                       = "Https"
+    ssl_certificate_name           = "main_cert"
+  }
 
   # Backend address pools
 
@@ -114,13 +114,13 @@ resource "azurerm_application_gateway" "frontend" {
 
   # Request routing rules
 
-  #request_routing_rule {
-  #  name               = "anyhost_https_path_routing"
-  #  rule_type          = "PathBasedRouting"
-  #  http_listener_name = "anyhost_https"
-  #  url_path_map_name  = "main_path_map"
-  #  priority           = 10020
-  #}
+  request_routing_rule {
+    name               = "anyhost_https_path_routing"
+    rule_type          = "PathBasedRouting"
+    http_listener_name = "anyhost_https"
+    url_path_map_name  = "main_path_map"
+    priority           = 10020
+  }
 
   request_routing_rule {
     name               = "anyhost_http_path_routing"
@@ -145,12 +145,39 @@ resource "azurerm_application_gateway" "frontend" {
     }
   }
 
-  #ssl_certificate {
-  #  name                = "anyhost_httpsvaultCert"
-  #  key_vault_secret_id = "https://wwtssl.vault.azure.net/secrets/worldwidetelescope-org/"
-  #}
+  ssl_certificate {
+    name                = "main_cert"
+    key_vault_secret_id = "https://wwtssl.vault.azure.net/secrets/wwtelescope-dev/"
+  }
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.gateway.id]
+  }
 
   lifecycle {
     prevent_destroy = true
   }
+}
+
+
+# Infra for linking up the App Gateway with an SSL cert managed by
+# keyvault-acmebot.
+#
+# The gateway needs an identity to be able to access the keyvault with the cert,
+# as I understand it.
+
+resource "azurerm_user_assigned_identity" "gateway" {
+  name                = "${var.prefix}-gw-ssl-ident"
+  resource_group_name = azurerm_resource_group.gateway.name
+  location            = azurerm_resource_group.gateway.location
+}
+
+resource "azurerm_key_vault_access_policy" "gw_cert" {
+  # XXX TEMP
+  #key_vault_id       = azurerm_key_vault.coreapp.id
+  key_vault_id            = var.tmpVaultId
+  tenant_id               = azurerm_user_assigned_identity.gateway.tenant_id
+  object_id               = azurerm_user_assigned_identity.gateway.principal_id
+  certificate_permissions = ["Get"]
 }
