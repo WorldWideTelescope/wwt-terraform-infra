@@ -22,6 +22,7 @@ resource "azurerm_linux_web_app" "cx_frontend" {
   service_plan_id     = azurerm_service_plan.cx_backend.id
 
   app_settings = {
+    "NUXT_PUBLIC_API_URL"      = "https://api.${var.tld}"
     "NUXT_PUBLIC_KEYCLOAK_URL" = "https://${azurerm_linux_web_app.keycloak.default_hostname}/auth"
   }
 
