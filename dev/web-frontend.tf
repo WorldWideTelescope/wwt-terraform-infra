@@ -24,6 +24,14 @@ resource "azurerm_public_ip" "gateway" {
   }
 }
 
+resource "azurerm_dns_a_record" "cx_root_a" {
+  name                = "@"
+  zone_name           = azurerm_dns_zone.flagship.name
+  resource_group_name = azurerm_dns_zone.flagship.resource_group_name
+  ttl                 = 3600
+  records             = [azurerm_public_ip.gateway.ip_address]
+}
+
 resource "azurerm_subnet" "appgw" {
   name                 = "appgw"
   resource_group_name  = azurerm_resource_group.cx_backend.name
@@ -176,8 +184,8 @@ resource "azurerm_user_assigned_identity" "gateway" {
 resource "azurerm_key_vault_access_policy" "gw_cert" {
   # XXX TEMP
   #key_vault_id       = azurerm_key_vault.coreapp.id
-  key_vault_id            = var.tmpVaultId
-  tenant_id               = azurerm_user_assigned_identity.gateway.tenant_id
-  object_id               = azurerm_user_assigned_identity.gateway.principal_id
-  certificate_permissions = ["Get"]
+  key_vault_id       = var.tmpVaultId
+  tenant_id          = azurerm_user_assigned_identity.gateway.tenant_id
+  object_id          = azurerm_user_assigned_identity.gateway.principal_id
+  secret_permissions = ["Get"]
 }
