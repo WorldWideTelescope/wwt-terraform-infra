@@ -120,6 +120,30 @@ resource "azurerm_application_gateway" "frontend" {
     trusted_root_certificate_names      = []
   }
 
+  backend_http_settings {
+    name                                = "keycloak"
+    affinity_cookie_name                = "ApplicationGatewayAffinity"
+    cookie_based_affinity               = "Disabled"
+    pick_host_name_from_backend_address = true
+    port                                = 80
+    protocol                            = "Http"
+    request_timeout                     = 20
+    trusted_root_certificate_names      = []
+    probe_name                          = "keycloak"
+  }
+
+  probe {
+    # Keycloak needs a custom probe since it only handles requests within the
+    # /auth/ prefix.
+    name                                      = "keycloak"
+    pick_host_name_from_backend_http_settings = true
+    interval                                  = 30
+    timeout                                   = 30
+    protocol                                  = "Http"
+    path                                      = "/auth/"
+    unhealthy_threshold                       = 3
+  }
+
   # Request routing rules
 
   request_routing_rule {
@@ -146,7 +170,7 @@ resource "azurerm_application_gateway" "frontend" {
     path_rule {
       name                       = "keycloak"
       backend_address_pool_name  = "keycloak"
-      backend_http_settings_name = "rehost_http_setting"
+      backend_http_settings_name = "keycloak"
       paths = [
         "/auth/*",
       ]

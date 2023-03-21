@@ -40,27 +40,30 @@ resource "azurerm_linux_web_app" "keycloak" {
   service_plan_id     = azurerm_service_plan.cx_backend.id
 
   app_settings = {
-    "DOCKER_REGISTRY_SERVER_URL" = "https://index.docker.io/v1"
-    "KEYCLOAK_FRONTEND_URL"      = "https://${var.prefix}-keycloak.azurewebsites.net/auth"
-    "KEYCLOAK_USER"              = "wwtadmin"
-    "KEYCLOAK_PASSWORD"          = var.cxkeycloakAdminPassword
-    "DB_VENDOR"                  = "postgres"
-    "DB_ADDR"                    = "${var.prefix}-cxsql.privatelink.postgres.database.azure.com"
-    "DB_USER"                    = "psqladmin@${var.prefix}-cxsql"
-    "DB_PASSWORD"                = var.cxsqlAdminPassword
-    "JDBC_PARAMS"                = "sslmode=prefer&sslrootcert=/etc/ssl/certs/ca-bundle.crt"
-    "PROXY_ADDRESS_FORWARDING"   = "true"
+    "DOCKER_REGISTRY_SERVER_URL" = "https://quay.io/"
+    "KC_DB"                      = "postgres"
+    "KC_DB_URL"                  = "jdbc:postgresql://${var.prefix}-cxsql.privatelink.postgres.database.azure.com/keycloak?sslmode=prefer&sslrootcert=/etc/ssl/certs/ca-bundle.crt"
+    "KC_DB_USERNAME"             = "psqladmin@${var.prefix}-cxsql"
+    "KC_DB_PASSWORD"             = var.cxsqlAdminPassword
+    "KC_HOSTNAME"                = "${var.tld}"
+    "KC_HOSTNAME_ADMIN"          = "${var.tld}"
+    "KC_HOSTNAME_STRICT"         = "false"
+    "KC_HTTP_RELATIVE_PATH"      = "/auth"
+    "KC_PROXY"                   = "edge"
+    "KEYCLOAK_ADMIN"             = "wwtadmin2"
+    "KEYCLOAK_ADMIN_PASSWORD"    = var.cxkeycloakAdminPassword
   }
 
-  https_only = true
+  https_only = false
 
   site_config {
     always_on              = false
     ftps_state             = "Disabled"
     vnet_route_all_enabled = true
+    app_command_line       = "start"
 
     application_stack {
-      docker_image     = "jboss/keycloak"
+      docker_image     = "keycloak/keycloak"
       docker_image_tag = "latest"
     }
   }

@@ -23,7 +23,7 @@ resource "azurerm_linux_web_app" "cx_frontend" {
 
   app_settings = {
     "NUXT_PUBLIC_API_URL"      = "https://api.${var.tld}"
-    "NUXT_PUBLIC_KEYCLOAK_URL" = "https://${azurerm_linux_web_app.keycloak.default_hostname}/auth"
+    "NUXT_PUBLIC_KEYCLOAK_URL" = "https://${var.tld}/auth"
   }
 
   site_config {
