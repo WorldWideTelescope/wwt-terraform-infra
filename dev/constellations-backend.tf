@@ -47,6 +47,7 @@ resource "azurerm_linux_web_app" "cx_backend" {
 
   app_settings = {
     "AZURE_COSMOS_CONNECTIONSTRING" = azurerm_cosmosdb_account.cx_backend.connection_strings[0]
+    "KEYCLOAK_URL"                  = "https://${var.tld}/auth/"
   }
 
   site_config {
