@@ -33,3 +33,10 @@ variable "gatewaySslCertSecretId" {
   # This cert is managed outside of Terraform through keyvault-acmebot:
   description = "The Keyvault ID of the SSL certificate to use for the App Gateway frontend"
 }
+
+variable "superuserAccountId" {
+  # I can't see how it would be a problem if this value leaked somehow, but just
+  # to be safe we mark it as sensitive.
+  description = "The account ID of an account with special admin privileges"
+  sensitive   = true
+}
