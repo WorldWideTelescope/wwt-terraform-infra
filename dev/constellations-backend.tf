@@ -1,4 +1,23 @@
 # The backend database and API service for the Constellations web app.
+#
+# Because the MongoDB is isolated on a private network, the usual Azure admin
+# systems do not work. However, with the bastion host setup defined in
+# `constellations-bastion.tf`, it is possible to administer the database
+# locally.
+#
+# 1. First, set up the bastion and SSH into it.
+# 2. Forward a port to the DB:
+# ```
+# ssh -O forward -L 10255:wwtdev-cxbe-server.mongo.cosmos.azure.com:10255 wwt@wwtdevcxb.westus.cloudapp.azure.com
+# ```
+# 3. Make a temporary connection string, replacing the `...cosmos.azure.com` hostname
+#    with `localhost`. You can get the connection string from the database's admin
+#    page in the Azure Portal.
+# 4. Connect using pymongo with some special settings:
+# ```
+# conn = pymongo.MongoClient(cs, tlsAllowInvalidCertificates=True, directConnection=True)
+# ```
+#     where `cs` is the temporary connection string.
 
 resource "azurerm_resource_group" "cx_backend" {
   name     = "${var.prefix}-cxbackend"
