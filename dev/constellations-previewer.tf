@@ -13,7 +13,6 @@ resource "azurerm_linux_web_app" "cx_previewer" {
     "AZURE_COSMOS_CONNECTIONSTRING"   = azurerm_cosmosdb_account.cx_backend.connection_strings[0]
     "AZURE_STORAGE_CONNECTION_STRING" = azurerm_storage_account.constellations.primary_connection_string
     "NUXT_PUBLIC_API_URL"             = "https://api.${var.tld}"
-    "DOCKER_ENABLE_CI"                = "true"
     "DOCKER_REGISTRY_SERVER_URL"      = "https://index.docker.io/v1"
   }
 
@@ -22,6 +21,11 @@ resource "azurerm_linux_web_app" "cx_previewer" {
     ftps_state             = "FtpsOnly"
     vnet_route_all_enabled = true
     app_command_line       = "node server/dist/server.js"
+
+    application_stack {
+      docker_image     = "aasworldwidetelescope/constellations-previewer"
+      docker_image_tag = "latest"
+    }
   }
 }
 
