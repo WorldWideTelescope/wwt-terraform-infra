@@ -66,6 +66,7 @@ resource "azurerm_linux_web_app" "cx_backend" {
 
   app_settings = {
     "AZURE_COSMOS_CONNECTIONSTRING" = azurerm_cosmosdb_account.cx_backend.connection_strings[0]
+    "CX_PREVIEW_BASE_URL"           = "https://${azurerm_cdn_endpoint_custom_domain.cxdata.host_name}/previews"
     "CX_SUPERUSER_ACCOUNT_ID"       = var.superuserAccountId
     "KEYCLOAK_URL"                  = "https://${var.tld}/auth/"
   }
