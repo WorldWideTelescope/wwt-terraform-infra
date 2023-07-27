@@ -4,7 +4,6 @@
 # - @ SOA record
 # - @ NS record
 # - @ MX record
-# - @ TXT record
 # - `mail` A record
 # - `mail` MX record
 
@@ -23,6 +22,29 @@ resource "azurerm_dns_a_record" "root_a" {
   resource_group_name = azurerm_dns_zone.flagship.resource_group_name
   ttl                 = 3600
   records             = [azurerm_public_ip.frontend.ip_address]
+}
+
+resource "azurerm_dns_txt_record" "root_txt" {
+  name                = "@"
+  zone_name           = azurerm_dns_zone.flagship.name
+  resource_group_name = azurerm_dns_zone.flagship.resource_group_name
+  ttl                 = 3600
+
+  record {
+    value = "v=spf1 a mx include:sendgrid.net ~all"
+  }
+
+  record {
+    value = "MS=ms25610440"
+  }
+
+  record {
+    value = "google-site-verification=${var.googleSiteVerificationTag1}"
+  }
+
+  record {
+    value = "google-site-verification=${var.googleSiteVerificationTag2}"
+  }
 }
 
 resource "azurerm_dns_cname_record" "www" {

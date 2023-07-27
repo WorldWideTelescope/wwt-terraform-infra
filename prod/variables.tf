@@ -80,3 +80,11 @@ variable "wwttoursDbPassword" {
 variable "appLogSasUrl" {
   description = "Azure Blob Storage SAS URL for Windows web app diagnostic logs"
 }
+
+variable "googleSiteVerificationTag1" {
+  description = "A Google site verification tag (1)"
+}
+
+variable "googleSiteVerificationTag2" {
+  description = "A Google site verification tag (2)"
+}
