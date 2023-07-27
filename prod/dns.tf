@@ -3,7 +3,6 @@
 # Not (yet) described here:
 # - @ SOA record
 # - @ NS record
-# - @ MX record
 # - `mail` A record
 # - `mail` MX record
 
@@ -44,6 +43,38 @@ resource "azurerm_dns_txt_record" "root_txt" {
 
   record {
     value = "google-site-verification=${var.googleSiteVerificationTag2}"
+  }
+}
+
+resource "azurerm_dns_mx_record" "root_mx" {
+  name                = "@"
+  zone_name           = azurerm_dns_zone.flagship.name
+  resource_group_name = azurerm_dns_zone.flagship.resource_group_name
+  ttl                 = 3600
+
+  record {
+    preference = 1
+    exchange   = "aspmx.l.google.com."
+  }
+
+  record {
+    preference = 5
+    exchange   = "alt1.aspmx.l.google.com."
+  }
+
+  record {
+    preference = 5
+    exchange   = "alt2.aspmx.l.google.com."
+  }
+
+  record {
+    preference = 10
+    exchange   = "alt3.aspmx.l.google.com."
+  }
+
+  record {
+    preference = 10
+    exchange   = "alt4.aspmx.l.google.com."
   }
 }
 
