@@ -66,6 +66,9 @@ resource "azurerm_linux_web_app" "cx_backend" {
 
   app_settings = {
     "AZURE_COSMOS_CONNECTIONSTRING" = azurerm_cosmosdb_account.cx_backend.connection_strings[0]
+    "CX_PREVIEW_BASE_URL"           = "https://${azurerm_cdn_endpoint_custom_domain.cxdata.host_name}/previews"
+    "CX_PREVIEW_SERVICE_URL"        = "http://${azurerm_private_dns_a_record.cx_previewer_server.name}.azurewebsites.net"
+    "CX_SESSION_SECRETS"            = var.sessionSecrets
     "CX_SUPERUSER_ACCOUNT_ID"       = var.superuserAccountId
     "KEYCLOAK_URL"                  = "https://${var.tld}/auth/"
   }
@@ -75,6 +78,18 @@ resource "azurerm_linux_web_app" "cx_backend" {
     ftps_state             = "FtpsOnly"
     vnet_route_all_enabled = true
     app_command_line       = "yarn start"
+  }
+
+  logs {
+    detailed_error_messages = false
+    failed_request_tracing  = false
+
+    http_logs {
+      file_system {
+        retention_in_days = 0
+        retention_in_mb   = 35
+      }
+    }
   }
 
   virtual_network_subnet_id = azurerm_subnet.cx_backend_app.id

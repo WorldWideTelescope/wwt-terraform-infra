@@ -25,6 +25,15 @@ variable "cxkeycloakAdminPassword" {
   sensitive   = true
 }
 
+variable "googleAnalyticsTag" {
+  description = "The Google Analytics tag for frontend telemetry (of the form G-XXXXXXXXXX)"
+}
+
+variable "sessionSecrets" {
+  description = "Space-separated list of secrets for backend session management"
+  sensitive   = true
+}
+
 variable "tmpVaultId" {
   description = "The Azure resource ID of the keyvault to use"
 }

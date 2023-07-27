@@ -42,10 +42,13 @@ resource "azurerm_linux_web_app" "cx_previewer" {
   service_plan_id     = azurerm_service_plan.cx_previewer.id
 
   app_settings = {
+    "CONSTELLATIONS_MAX_THREADS"      = "2"
     "MONGO_CONNECTION_STRING"         = azurerm_cosmosdb_account.cx_backend.connection_strings[0]
     "AZURE_STORAGE_CONNECTION_STRING" = azurerm_storage_account.constellations.primary_connection_string
     "NUXT_PUBLIC_API_URL"             = "https://api.${var.tld}"
     "DOCKER_REGISTRY_SERVER_URL"      = "https://index.docker.io/v1"
+    #"CX_PREVIEW_DUMPIO"               = "true"
+    #"CX_PREVIEW_LOG_LEVEL"            = "debug"
   }
 
   site_config {
