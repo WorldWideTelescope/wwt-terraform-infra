@@ -19,7 +19,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.47.0"
+      version = "=3.77"
     }
   }
 
@@ -27,7 +27,7 @@ terraform {
     resource_group_name  = "devops-support"
     storage_account_name = "wwtdevops"
     container_name       = "terraform-state"
-    key                  = "dev.terraform.tfstate"  # different than prod!
+    key                  = "dev.terraform.tfstate" # different than prod!
   }
 }
 

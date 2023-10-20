@@ -27,9 +27,13 @@ The eventual goal is to merge `dev` and `prod`, and have the distinctions
 entirely subsumed into the `.tfvars` files, but that is unlikely to happen
 anytime soon.
 
-To update the Terraform provider version:
+
+## Updating the Terraform provider version
+
+Do this often, since it's always evolving.
 
 - Remove `.terraform.lock.hcl`
-- Update minimum version in the `main.tf` file
+- Update the version in the `main.tf` file
+  - Latest version identified here: https://registry.terraform.io/providers/hashicorp/azurerm/latest
 - Run `terraform init`
 - Run `terraform (plan|apply) -var-file=prod.tfvars -refresh-only`
