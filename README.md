@@ -1,7 +1,7 @@
 # Terraform Infrastructure for WWT Web Services
 
 This repository contains [Terraform] files that define the infrastructure for a
-large portion of the [AAS WorldWide Telescope][home] web services. In principle,
+large portion of the [WorldWide Telescope][home] web services. In principle,
 you could use these templates to create your own clone of the WWT web app,
 although the WWT team does not test the templates for this kind of portability,
 and various secrets and data holdings are not expressed in these files.
