@@ -91,26 +91,32 @@ variable "liveClientRedirectUrlMap" {
 
 variable "liveClientSecret" {
   description = "The OAuth app secret"
+  sensitive   = true
 }
 
 variable "communitiesDbAdminPassword" {
   description = "The password to the communities database server admin account"
+  sensitive   = true
 }
 
 variable "wwtcoreDbAdminPassword" {
   description = "The password to the wwtcore database server admin account"
+  sensitive   = true
 }
 
 variable "layerscapeDbPassword" {
   description = "The password to the Layerscape database user account"
+  sensitive   = true
 }
 
 variable "wwttoursDbPassword" {
   description = "The password to the WWTTours database user account"
+  sensitive   = true
 }
 
 variable "appLogSasUrl" {
   description = "Azure Blob Storage SAS URL for Windows web app diagnostic logs"
+  sensitive   = true
 }
 
 variable "googleSiteVerificationTag1" {
