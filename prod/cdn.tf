@@ -69,7 +69,20 @@ resource "azurerm_cdn_endpoint_custom_domain" "web" {
   lifecycle {
     prevent_destroy = true
   }
+
+  depends_on = [
+    azurerm_dns_cname_record.assets_web,
+  ]
 }
+
+resource "azurerm_dns_cname_record" "assets_web" {
+  name                = "web"
+  resource_group_name = azurerm_dns_zone.assets.resource_group_name
+  zone_name           = azurerm_dns_zone.assets.name
+  ttl                 = 3600
+  target_resource_id  = azurerm_cdn_endpoint.web.id
+}
+
 
 # data1.wwtassets.org
 
@@ -108,6 +121,18 @@ resource "azurerm_cdn_endpoint_custom_domain" "data1" {
   lifecycle {
     prevent_destroy = true
   }
+
+  depends_on = [
+    azurerm_dns_cname_record.assets_data1,
+  ]
+}
+
+resource "azurerm_dns_cname_record" "assets_data1" {
+  name                = "data1"
+  resource_group_name = azurerm_dns_zone.assets.resource_group_name
+  zone_name           = azurerm_dns_zone.assets.name
+  ttl                 = 3600
+  target_resource_id  = azurerm_cdn_endpoint.data1.id
 }
 
 # docs.worldwidetelescope.org
