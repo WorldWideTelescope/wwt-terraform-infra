@@ -145,6 +145,11 @@ resource "azurerm_application_gateway" "frontend" {
     fqdns = [azurerm_linux_web_app.keycloak.default_hostname]
   }
 
+  backend_address_pool {
+    name  = "cx-frontend"
+    fqdns = [azurerm_linux_web_app.cx_frontend.default_hostname]
+  }
+
   # Backend HTTP settings
   #
   # Modifying this collection is tricky. If Terraform sees any disagreement
@@ -327,6 +332,15 @@ resource "azurerm_application_gateway" "frontend" {
         "/auth/*",
       ]
     }
+
+    path_rule {
+      name                       = "cx-frontend"
+      backend_address_pool_name  = "cx-frontend"
+      backend_http_settings_name = "rehost-http-setting"
+      paths = [
+        "/@*",
+      ]
+    }
   }
 
   # Second of two path maps that should be kept identical except for HTTP vs. HTTPS
@@ -422,6 +436,15 @@ resource "azurerm_application_gateway" "frontend" {
       backend_http_settings_name = "keycloak"
       paths = [
         "/auth/*",
+      ]
+    }
+
+    path_rule {
+      name                       = "cx-frontend"
+      backend_address_pool_name  = "cx-frontend"
+      backend_http_settings_name = "rehost-http-setting"
+      paths = [
+        "/@*",
       ]
     }
   }
