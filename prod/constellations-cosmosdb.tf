@@ -36,6 +36,11 @@ resource "azurerm_cosmosdb_account" "cx_backend" {
     max_interval_in_seconds = 5
     max_staleness_prefix    = 100
   }
+
+  restore {
+    restore_timestamp_in_utc   = "2023-10-21T21:00:00Z"
+    source_cosmosdb_account_id = "/subscriptions/581389a3-e46e-43a4-bef4-4d0c1c43e6a6/providers/Microsoft.DocumentDB/locations/westus/restorableDatabaseAccounts/56fc946b-0a0b-4674-9f05-0f2b8cd73b69"
+  }
 }
 
 # Supporting vnet/private-endpoint stuff
