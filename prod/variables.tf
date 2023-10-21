@@ -19,11 +19,13 @@ variable "tld" {
 // Constellations stuff
 
 variable "cxsqlAdminPassword" {
+  // Sync with LastPass. Arbitrary, not connected to any external services.
   description = "The administrator password for the Constellations PostgreSQL database"
   sensitive   = true
 }
 
 variable "cxkeycloakAdminPassword" {
+  // Sync with LastPass. Arbitrary, not connected to any external services.
   description = "The administrator password for the Constellations Keycloak server"
   sensitive   = true
 }
@@ -33,6 +35,7 @@ variable "googleAnalyticsTag" {
 }
 
 variable "sessionSecrets" {
+  // Sync with LastPass. Arbitrary, not connected to any external services.
   description = "Space-separated list of secrets for backend session management"
   sensitive   = true
 }
