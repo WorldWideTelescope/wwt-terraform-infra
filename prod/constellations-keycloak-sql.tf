@@ -78,6 +78,11 @@ resource "azurerm_private_dns_a_record" "cx_backend_sql" {
   resource_group_name = azurerm_resource_group.cx_backend.name
   ttl                 = 10
   records             = ["10.0.4.4"]
+
+  tags = {
+    # Even when we create using Terraform, this tag gets auto-added
+    "creator" = "created by private endpoint wwtprod-cxbeSqlEndpoint with resource guid 5b0a25e2-8040-4ce1-8ace-eae834d4fbb1"
+  }
 }
 
 resource "azurerm_private_dns_a_record" "cx_backend_sql_loc" {
