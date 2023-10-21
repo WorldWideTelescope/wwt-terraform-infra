@@ -28,13 +28,16 @@ resource "azurerm_resource_group" "cx_backend" {
   }
 }
 
-#resource "azurerm_service_plan" "cx_backend" {
-#  name                = "${var.prefix}cxbackend"
-#  resource_group_name = azurerm_resource_group.cx_backend.name
-#  location            = azurerm_resource_group.cx_backend.location
-#  os_type             = "Linux"
-#  sku_name            = "P1v2"
-#}
+# App service plan for the backend services. The hope is that these will scale
+# more or less in unison ...
+
+resource "azurerm_service_plan" "cx_backend" {
+  name                = "${var.prefix}cxbackend"
+  resource_group_name = azurerm_resource_group.cx_backend.name
+  location            = azurerm_resource_group.cx_backend.location
+  os_type             = "Linux"
+  sku_name            = "P1v2"
+}
 
 # The backend virtual network
 
