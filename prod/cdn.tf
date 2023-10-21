@@ -135,6 +135,77 @@ resource "azurerm_dns_cname_record" "assets_data1" {
   target_resource_id  = azurerm_cdn_endpoint.data1.id
 }
 
+# cx.wwtassets.org
+
+resource "azurerm_cdn_endpoint" "cxdata" {
+  name                = "${var.prefix}-cxdata"
+  profile_name        = azurerm_cdn_profile.main.name
+  resource_group_name = azurerm_resource_group.web_frontend_legacy.name
+  location            = "global"
+
+  optimization_type             = "GeneralWebDelivery"
+  origin_host_header            = azurerm_storage_account.constellations.primary_blob_host
+  querystring_caching_behaviour = "UseQueryString"
+
+  origin {
+    name      = "constellations"
+    host_name = azurerm_storage_account.constellations.primary_blob_host
+  }
+
+  global_delivery_rule {
+    modify_response_header_action {
+      action = "Overwrite"
+      name   = "Access-Control-Allow-Origin"
+      value  = "*"
+    }
+
+    modify_response_header_action {
+      action = "Overwrite"
+      name   = "Access-Control-Allow-Methods"
+      value  = "GET"
+    }
+
+    modify_response_header_action {
+      action = "Overwrite"
+      name   = "Access-Control-Allow-Headers"
+      value  = "Content-Disposition,Content-Encoding,Content-Type"
+    }
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "azurerm_cdn_endpoint_custom_domain" "cxdata" {
+  name = "${var.prefix}-cxdata"
+  # Capitalization consistency issue:
+  cdn_endpoint_id = replace(azurerm_cdn_endpoint.cxdata.id, "resourcegroups", "resourceGroups")
+  host_name       = "cx.wwtassets.org"
+
+  cdn_managed_https {
+    certificate_type = "Dedicated"
+    protocol_type    = "ServerNameIndication"
+    tls_version      = "TLS12"
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
+
+  depends_on = [
+    azurerm_dns_cname_record.assets_cx,
+  ]
+}
+
+resource "azurerm_dns_cname_record" "assets_cx" {
+  name                = "cx"
+  resource_group_name = azurerm_dns_zone.assets.resource_group_name
+  zone_name           = azurerm_dns_zone.assets.name
+  ttl                 = 3600
+  target_resource_id  = azurerm_cdn_endpoint.cxdata.id
+}
+
 # docs.worldwidetelescope.org
 
 resource "azurerm_cdn_endpoint" "webdocs" {
