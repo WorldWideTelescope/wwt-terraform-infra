@@ -1,4 +1,7 @@
 # The Keycloak ident/auth service for Constellations
+#
+# See the `README.md` in `wwt-constellations-backend` for some
+# guidance about how to initialize the server.
 
 resource "azurerm_linux_web_app" "keycloak" {
   name                = "${var.prefix}-keycloak"
