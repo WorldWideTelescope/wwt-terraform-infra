@@ -12,6 +12,38 @@ variable "oldPrefix" {
   description = "A different, inferior public resource prefix label used to set up the production system"
 }
 
+variable "tld" {
+  description = "The top-level domain of the website"
+}
+
+// Constellations stuff
+
+variable "cxsqlAdminPassword" {
+  description = "The administrator password for the Constellations PostgreSQL database"
+  sensitive   = true
+}
+
+variable "cxkeycloakAdminPassword" {
+  description = "The administrator password for the Constellations Keycloak server"
+  sensitive   = true
+}
+
+variable "googleAnalyticsTag" {
+  description = "The Google Analytics tag for frontend telemetry (of the form G-XXXXXXXXXX)"
+}
+
+variable "sessionSecrets" {
+  description = "Space-separated list of secrets for backend session management"
+  sensitive   = true
+}
+
+variable "superuserAccountId" {
+  # I can't see how it would be a problem if this value leaked somehow, but just
+  # to be safe we mark it as sensitive.
+  description = "The account ID of an account with special admin privileges"
+  sensitive   = true
+}
+
 // Names for "legacy" resources -- preexisting assets that we have imported into
 // Terraform.
 

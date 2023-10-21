@@ -94,6 +94,22 @@ resource "azurerm_storage_account" "permanent_data_mars" {
   }
 }
 
+// The "constellations" storage account hosts data related to the Constellations
+// framework.
+resource "azurerm_storage_account" "constellations" {
+  name                      = "${var.prefix}cxdata"
+  resource_group_name       = azurerm_resource_group.permanent_data.name
+  location                  = azurerm_resource_group.permanent_data.location
+  account_tier              = "Standard"
+  account_replication_type  = "GRS"
+  enable_https_traffic_only = false
+  min_tls_version           = "TLS1_0" # added to reflect ground truth 2022-Sep
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 // The "wwtcore" database server hosts the AstroObjects and WWTTours databases.
 resource "azurerm_mssql_server" "permanent_data_wwtcore_db_server" {
   name                          = var.legacyNameWwtcoreDBServer
