@@ -77,6 +77,11 @@ resource "azurerm_private_dns_a_record" "cx_backend_nosql" {
   resource_group_name = azurerm_resource_group.cx_backend.name
   ttl                 = 10
   records             = ["10.0.0.4"]
+
+  tags = {
+    # Even when we create using Terraform, this tag gets auto-added
+    "creator" = "created by private endpoint wwtprod-cxbeDbEndpoint with resource guid c19c278a-2cd1-4228-9ab4-dd9d71a974b7"
+  }
 }
 
 resource "azurerm_private_dns_a_record" "cx_backend_nosql_loc" {
@@ -85,4 +90,9 @@ resource "azurerm_private_dns_a_record" "cx_backend_nosql_loc" {
   resource_group_name = azurerm_resource_group.cx_backend.name
   ttl                 = 10
   records             = ["10.0.0.5"]
+
+  tags = {
+    # Even when we create using Terraform, this tag gets auto-added
+    "creator" = "created by private endpoint wwtprod-cxbeDbEndpoint with resource guid c19c278a-2cd1-4228-9ab4-dd9d71a974b7"
+  }
 }
