@@ -339,6 +339,7 @@ resource "azurerm_application_gateway" "frontend" {
       backend_http_settings_name = "rehost-http-setting"
       paths = [
         "/@*",
+        "/_cxadmin/*",
         "/_nuxt/*",
       ]
     }
@@ -446,6 +447,7 @@ resource "azurerm_application_gateway" "frontend" {
       backend_http_settings_name = "rehost-http-setting"
       paths = [
         "/@*",
+        "/_cxadmin/*",
         "/_nuxt/*",
       ]
     }
