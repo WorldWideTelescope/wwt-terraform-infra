@@ -37,6 +37,37 @@ resource "azurerm_linux_web_app" "cx_backend" {
   virtual_network_subnet_id = azurerm_subnet.cx_backend_app.id
 }
 
+# "stage" slot identical but not always_on. Note that most config/settings
+# swap when you swap deployment slots, so this slot and production must
+# be kept in sync. Fortunately the always_on setting stays put.
+resource "azurerm_linux_web_app_slot" "cx_backend_stage" {
+  name           = "stage"
+  app_service_id = azurerm_linux_web_app.cx_backend.id
+
+  app_settings = azurerm_linux_web_app.cx_backend.app_settings
+
+  site_config {
+    always_on              = false
+    ftps_state             = "FtpsOnly"
+    vnet_route_all_enabled = true
+    app_command_line       = "yarn start"
+  }
+
+  logs {
+    detailed_error_messages = false
+    failed_request_tracing  = false
+
+    http_logs {
+      file_system {
+        retention_in_days = 0
+        retention_in_mb   = 35
+      }
+    }
+  }
+
+  virtual_network_subnet_id = azurerm_linux_web_app.cx_backend.virtual_network_subnet_id
+}
+
 # Public custom hostname for the backend app
 
 resource "azurerm_dns_cname_record" "api" {

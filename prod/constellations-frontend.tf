@@ -41,3 +41,19 @@ resource "azurerm_linux_web_app" "cx_frontend" {
     app_command_line = "node node_modules/nuxt/bin/nuxt.mjs start"
   }
 }
+
+# "stage" slot identical but not always_on. Note that most config/settings
+# swap when you swap deployment slots, so this slot and production must
+# be kept in sync. Fortunately the always_on setting stays put.
+resource "azurerm_linux_web_app_slot" "cx_frontend_stage" {
+  name           = "stage"
+  app_service_id = azurerm_linux_web_app.cx_frontend.id
+
+  app_settings = azurerm_linux_web_app.cx_frontend.app_settings
+
+  site_config {
+    always_on        = false
+    ftps_state       = "FtpsOnly"
+    app_command_line = "node node_modules/nuxt/bin/nuxt.mjs start"
+  }
+}
