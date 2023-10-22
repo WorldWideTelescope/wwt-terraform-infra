@@ -341,6 +341,7 @@ resource "azurerm_application_gateway" "frontend" {
         "/@*",
         "/_cxadmin/*",
         "/_nuxt/*",
+        "/silent-check-sso",
       ]
     }
   }
@@ -449,6 +450,7 @@ resource "azurerm_application_gateway" "frontend" {
         "/@*",
         "/_cxadmin/*",
         "/_nuxt/*",
+        "/silent-check-sso",
       ]
     }
   }
