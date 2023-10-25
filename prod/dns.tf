@@ -1,6 +1,6 @@
 # The DNS configuration.
 #
-# Not (yet) described here:
+# Not (yet) described for the flagship:
 # - @ SOA record
 # - @ NS record
 # - `mail` A record
@@ -192,4 +192,45 @@ resource "azurerm_dns_cname_record" "content" {
   resource_group_name = azurerm_dns_zone.flagship.resource_group_name
   ttl                 = 3600
   record              = "wwtelescope.vo.msecnd.net."
+}
+
+# wwtassets.org zone
+
+resource "azurerm_dns_zone" "assets" {
+  name                = "wwtassets.org"
+  resource_group_name = azurerm_resource_group.support.name
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "azurerm_dns_a_record" "assets_root" {
+  name                = "@"
+  zone_name           = azurerm_dns_zone.assets.name
+  resource_group_name = azurerm_dns_zone.assets.resource_group_name
+  ttl                 = 3600
+  records             = [azurerm_linux_web_app.core_nginx.outbound_ip_address_list[length(azurerm_linux_web_app.core_nginx.outbound_ip_address_list) - 1]]
+}
+
+resource "azurerm_dns_txt_record" "assets_root" {
+  name                = "@"
+  zone_name           = azurerm_dns_zone.assets.name
+  resource_group_name = azurerm_dns_zone.assets.resource_group_name
+  ttl                 = 3600
+
+  record {
+    value = "${azurerm_linux_web_app.core_nginx.default_hostname}."
+  }
+}
+
+resource "azurerm_dns_txt_record" "assets_verify" {
+  name                = "asuid"
+  zone_name           = azurerm_dns_zone.assets.name
+  resource_group_name = azurerm_dns_zone.assets.resource_group_name
+  ttl                 = 3600
+
+  record {
+    value = lower(azurerm_linux_web_app.core_nginx.custom_domain_verification_id)
+  }
 }

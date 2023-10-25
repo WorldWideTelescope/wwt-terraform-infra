@@ -140,7 +140,23 @@ resource "azurerm_application_gateway" "frontend" {
     fqdns = [azurerm_windows_web_app.communities.default_hostname]
   }
 
+  backend_address_pool {
+    name  = "keycloak"
+    fqdns = [azurerm_linux_web_app.keycloak.default_hostname]
+  }
+
+  backend_address_pool {
+    name  = "cx-frontend"
+    fqdns = [azurerm_linux_web_app.cx_frontend.default_hostname]
+  }
+
   # Backend HTTP settings
+  #
+  # Modifying this collection is tricky. If Terraform sees any disagreement
+  # between its expectations and reality, it seems to want to recreate all of
+  # the settings, which feels risky. Make changes through the Portal UI and then
+  # then do a `terraform apply -refresh-only` to sync up Terraform's state with
+  # the ground truth. That seems to work.
 
   backend_http_settings {
     name                  = "webstatic-http-setting"
@@ -175,6 +191,31 @@ resource "azurerm_application_gateway" "frontend" {
     trusted_root_certificate_names      = []
   }
 
+  backend_http_settings {
+    name                                = "keycloak"
+    cookie_based_affinity               = "Disabled"
+    pick_host_name_from_backend_address = true
+    port                                = 80
+    protocol                            = "Http"
+    request_timeout                     = 20
+    trusted_root_certificate_names      = []
+    probe_name                          = "keycloak"
+  }
+
+  # Probes
+
+  probe {
+    # Keycloak needs a custom probe since it only handles requests within the
+    # /auth/ prefix.
+    name                                      = "keycloak"
+    pick_host_name_from_backend_http_settings = true
+    interval                                  = 30
+    timeout                                   = 30
+    protocol                                  = "Http"
+    path                                      = "/auth/"
+    unhealthy_threshold                       = 3
+  }
+
   # Request routing rules
 
   request_routing_rule {
@@ -193,9 +234,13 @@ resource "azurerm_application_gateway" "frontend" {
     priority           = 10010
   }
 
+  # First of two path maps that should be kept identical except for HTTP vs. HTTPS
+  #
+  # When adding rules with Terraform, you have to append them, otherwise Terraform
+  # wants to delete-and-recreate them, which seems risky.
   url_path_map {
     name                               = "anyhost-https-path-routing"
-    default_backend_address_pool_name  = "wwtappgw1-nginx-core-prod-backend"
+    default_backend_address_pool_name  = "cx-frontend"
     default_backend_http_settings_name = "rehost-http-setting"
     default_rewrite_rule_set_name      = "global-cors-and-cache"
 
@@ -278,11 +323,33 @@ resource "azurerm_application_gateway" "frontend" {
       ]
       rewrite_rule_set_name = "global-cors-and-cache"
     }
+
+    path_rule {
+      name                       = "keycloak"
+      backend_address_pool_name  = "keycloak"
+      backend_http_settings_name = "keycloak"
+      paths = [
+        "/auth/*",
+      ]
+    }
+
+    path_rule {
+      name                       = "cx-frontend"
+      backend_address_pool_name  = "cx-frontend"
+      backend_http_settings_name = "rehost-http-setting"
+      paths = [
+        "/@*",
+        "/_cxadmin/*",
+        "/_nuxt/*",
+        "/silent-check-sso",
+      ]
+    }
   }
 
+  # Second of two path maps that should be kept identical except for HTTP vs. HTTPS
   url_path_map {
     name                               = "anyhost-http-path-routing"
-    default_backend_address_pool_name  = "wwtappgw1-nginx-core-prod-backend"
+    default_backend_address_pool_name  = "cx-frontend"
     default_backend_http_settings_name = "rehost-http-setting"
     default_rewrite_rule_set_name      = "global-cors-and-cache"
 
@@ -364,6 +431,27 @@ resource "azurerm_application_gateway" "frontend" {
         "/webclient/*",
       ]
       rewrite_rule_set_name = "global-cors-and-cache"
+    }
+
+    path_rule {
+      name                       = "keycloak"
+      backend_address_pool_name  = "keycloak"
+      backend_http_settings_name = "keycloak"
+      paths = [
+        "/auth/*",
+      ]
+    }
+
+    path_rule {
+      name                       = "cx-frontend"
+      backend_address_pool_name  = "cx-frontend"
+      backend_http_settings_name = "rehost-http-setting"
+      paths = [
+        "/@*",
+        "/_cxadmin/*",
+        "/_nuxt/*",
+        "/silent-check-sso",
+      ]
     }
   }
 
