@@ -8,15 +8,6 @@
 # service, but a frontend resource group for just the one app seems a little
 # pointless.)
 
-##resource "azurerm_resource_group" "cx_frontend" {
-##  name     = "${var.prefix}-cxfrontend"
-##  location = var.location
-##
-##  lifecycle {
-##    prevent_destroy = true
-##  }
-##}
-
 resource "azurerm_linux_web_app" "cx_frontend" {
   name                = "${var.prefix}-cxfe"
   location            = azurerm_resource_group.cx_backend.location
@@ -24,6 +15,7 @@ resource "azurerm_linux_web_app" "cx_frontend" {
   service_plan_id     = azurerm_service_plan.cx_backend.id
 
   app_settings = {
+    "NUXT_APP_CDN_URL"                 = "https://${azurerm_cdn_endpoint_custom_domain.general.host_name}/"
     "NUXT_PUBLIC_API_URL"              = "https://api.${var.tld}"
     "NUXT_PUBLIC_GOOGLE_ANALYTICS_TAG" = var.googleAnalyticsTag
     "NUXT_PUBLIC_HOST_URL"             = "https://${var.tld}"
