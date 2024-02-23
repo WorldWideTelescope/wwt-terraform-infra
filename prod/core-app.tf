@@ -178,15 +178,6 @@ resource "azurerm_key_vault_secret" "redis" {
   }
 }
 
-# The Application Insights APM layer.
-
-resource "azurerm_application_insights" "wwt" {
-  name                = "${var.oldPrefix}insights"
-  location            = azurerm_resource_group.coreapp.location
-  resource_group_name = azurerm_resource_group.coreapp.name
-  application_type    = "web"
-}
-
 # App service plan for the Linux-based apps. This includes the
 # core data services.
 
@@ -336,7 +327,7 @@ resource "azurerm_linux_web_app" "data" {
   }
 
   app_settings = {
-    "APPINSIGHTS_INSTRUMENTATIONKEY"      = azurerm_application_insights.wwt.instrumentation_key
+    "APPINSIGHTS_INSTRUMENTATIONKEY"      = "gone"
     "DOCKER_REGISTRY_SERVER_URL"          = "https://index.docker.io"
     "KeyVaultName"                        = azurerm_key_vault.coreapp.name
     "SlidingExpiration"                   = "30.00:00:00" # default to 30 days to keep cached items
@@ -567,7 +558,7 @@ resource "azurerm_windows_web_app" "communities" {
   }
 
   app_settings = {
-    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.wwt.instrumentation_key
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = "gone"
     #"AzurePlateFileStorageAccount" = azurerm_storage_account.datatier.primary_blob_endpoint
     "KeyVaultName"             = azurerm_key_vault.coreapp.name
     "LiveClientId"             = var.liveClientId
