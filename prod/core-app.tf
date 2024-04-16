@@ -574,9 +574,9 @@ resource "azurerm_windows_web_app" "communities" {
     failed_request_tracing  = true
 
     http_logs {
-      azure_blob_storage {
-        retention_in_days = 180
-        sas_url           = var.appLogSasUrl
+      file_system {
+        retention_in_days = 0
+        retention_in_mb   = 35
       }
     }
   }
