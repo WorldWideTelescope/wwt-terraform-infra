@@ -70,6 +70,10 @@ variable "legacyNameMarsStorage" {
   description = "The 'legacy name' of the Mars data storage account"
 }
 
+variable "legacyNameSSLVault" {
+  description = "The 'legacy name' of the WWT SSL certificate keyvault"
+}
+
 variable "legacyNameWwtcoreDBServer" {
   description = "The name to use for the 'legacy' SQL server with the AstroObjects and WWTTours databases"
 }

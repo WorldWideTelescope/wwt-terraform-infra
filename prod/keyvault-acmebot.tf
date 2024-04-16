@@ -50,7 +50,7 @@ module "keyvault_acmebot" {
   resource_group_name = azurerm_resource_group.kvacmebot.name
   location            = var.location
   mail_address        = "wwt@aas.org"
-  vault_uri           = "https://wwtssl.vault.azure.net/"
+  vault_uri           = azurerm_key_vault.ssl.vault_uri
 
   azure_dns = {
     subscription_id = data.azurerm_client_config.current.subscription_id
@@ -78,3 +78,21 @@ resource "azurerm_resource_group" "kvacmebot" {
     prevent_destroy = true
   }
 }
+
+resource "azurerm_key_vault" "ssl" {
+  name                        = var.legacyNameSSLVault
+  resource_group_name         = azurerm_resource_group.web_frontend_legacy.name
+  location                    = azurerm_resource_group.web_frontend_legacy.location
+  enabled_for_disk_encryption = false
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+  purge_protection_enabled    = false
+
+  sku_name = "standard"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+# TODO: could define azurerm_key_vault_access_policy entries but we have
+# preexisting ones that will be annoying to import.
