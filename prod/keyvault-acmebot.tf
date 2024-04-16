@@ -96,3 +96,18 @@ resource "azurerm_key_vault" "ssl" {
 
 # TODO: could define azurerm_key_vault_access_policy entries but we have
 # preexisting ones that will be annoying to import.
+
+resource "azurerm_role_assignment" "kvacmebot_flagship" {
+  scope                = replace(azurerm_dns_zone.flagship.id, "dnsZones", "dnszones")
+  role_definition_name = "DNS Zone Contributor"
+  principal_id         = module.keyvault_acmebot.principal_id
+}
+
+resource "azurerm_role_assignment" "kvacmebot_assets" {
+  scope                = replace(azurerm_dns_zone.assets.id, "dnsZones", "dnszones")
+  role_definition_name = "DNS Zone Contributor"
+  principal_id         = module.keyvault_acmebot.principal_id
+}
+
+# TODO: wwt-forum DNS zone. Use `az role assignment list --scope` to get the ID
+# for terraform import.
