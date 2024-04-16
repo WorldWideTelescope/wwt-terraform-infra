@@ -129,3 +129,8 @@ variable "googleSiteVerificationTag1" {
 variable "googleSiteVerificationTag2" {
   description = "A Google site verification tag (2)"
 }
+
+variable "keyvaultAcmebotAuthClientId" {
+  // get value from: func-wwtprod-kvacmebot Function App -> Authentication -> Microsoft identity provider
+  description = "The client ID for the keyvault-acmebot Active Directory connection"
+}

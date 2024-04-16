@@ -55,6 +55,19 @@ module "keyvault_acmebot" {
   azure_dns = {
     subscription_id = data.azurerm_client_config.current.subscription_id
   }
+
+  additional_app_settings = {
+    "WEBSITE_AUTH_AAD_ALLOWED_TENANTS" = data.azurerm_client_config.current.tenant_id
+  }
+
+  auth_settings = {
+    enabled = true
+    active_directory = {
+      client_id            = var.keyvaultAcmebotAuthClientId
+      client_secret        = "unused"
+      tenant_auth_endpoint = "https://sts.windows.net/${data.azurerm_client_config.current.tenant_id}/v2.0"
+    }
+  }
 }
 
 resource "azurerm_resource_group" "kvacmebot" {
