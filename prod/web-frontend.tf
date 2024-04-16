@@ -498,7 +498,7 @@ resource "azurerm_application_gateway" "frontend" {
 
   ssl_certificate {
     name                = "anyhost-httpsvaultCert"
-    key_vault_secret_id = "https://wwtssl.vault.azure.net/secrets/worldwidetelescope-org/"
+    key_vault_secret_id = "${azurerm_key_vault.ssl.vault_uri}secrets/worldwidetelescope-org/"
   }
 
   lifecycle {

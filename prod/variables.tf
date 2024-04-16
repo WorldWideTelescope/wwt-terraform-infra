@@ -70,6 +70,10 @@ variable "legacyNameMarsStorage" {
   description = "The 'legacy name' of the Mars data storage account"
 }
 
+variable "legacyNameSSLVault" {
+  description = "The 'legacy name' of the WWT SSL certificate keyvault"
+}
+
 variable "legacyNameWwtcoreDBServer" {
   description = "The name to use for the 'legacy' SQL server with the AstroObjects and WWTTours databases"
 }
@@ -128,4 +132,9 @@ variable "googleSiteVerificationTag1" {
 
 variable "googleSiteVerificationTag2" {
   description = "A Google site verification tag (2)"
+}
+
+variable "keyvaultAcmebotAuthClientId" {
+  // get value from: func-wwtprod-kvacmebot Function App -> Authentication -> Microsoft identity provider
+  description = "The client ID for the keyvault-acmebot Active Directory connection"
 }
