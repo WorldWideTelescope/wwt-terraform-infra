@@ -21,7 +21,6 @@ Directory structure:
 
 - `prod` expresses much, but not all, of the production WWT environment
 - `dev` expresses a more limited development environment
-- `keyvault-acmebot` describes our, well, Keyvault/Acmebot system
 
 The eventual goal is to merge `dev` and `prod`, and have the distinctions
 entirely subsumed into the `.tfvars` files, but that is unlikely to happen
