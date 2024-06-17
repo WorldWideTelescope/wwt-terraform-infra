@@ -14,11 +14,13 @@ resource "azurerm_linux_web_app" "keycloak" {
     "KC_DB_URL"               = "jdbc:postgresql://${azurerm_private_dns_a_record.cx_backend_sql.fqdn}/keycloak?sslmode=prefer&sslrootcert=/etc/ssl/certs/ca-bundle.crt"
     "KC_DB_USERNAME"          = "psqladmin@${azurerm_private_dns_a_record.cx_backend_sql.name}"
     "KC_DB_PASSWORD"          = var.cxsqlAdminPassword
-    "KC_HOSTNAME"             = "${var.tld}"
-    "KC_HOSTNAME_ADMIN"       = "${var.tld}"
+    "KC_HOSTNAME"             = "https://${var.tld}/auth"
+    "KC_HOSTNAME_ADMIN"       = "https://${var.tld}/auth"
     "KC_HOSTNAME_STRICT"      = "false"
+    "KC_HTTP_ENABLED"         = "true"
     "KC_HTTP_RELATIVE_PATH"   = "/auth"
-    "KC_PROXY"                = "edge"
+    "KC_PROXY"                = "edge" # this is deprecated -- need to figure out how to make KC not want HTTPS cert info
+    "KC_PROXY_HEADERS"        = "xforwarded"
     "KEYCLOAK_ADMIN"          = "wwtadmin"
     "KEYCLOAK_ADMIN_PASSWORD" = var.cxkeycloakAdminPassword
   }
@@ -32,7 +34,7 @@ resource "azurerm_linux_web_app" "keycloak" {
     app_command_line       = "start"
 
     application_stack {
-      docker_image_name   = "keycloak/keycloak:22.0"
+      docker_image_name   = "keycloak/keycloak:25.0"
       docker_registry_url = "https://quay.io"
     }
   }
