@@ -34,7 +34,7 @@ resource "azurerm_linux_web_app" "keycloak" {
     app_command_line       = "start"
 
     application_stack {
-      docker_image_name   = "keycloak/keycloak:25.0"
+      docker_image_name   = "keycloak/keycloak:25.0.2"
       docker_registry_url = "https://quay.io"
     }
   }
