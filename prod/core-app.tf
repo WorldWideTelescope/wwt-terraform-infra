@@ -154,17 +154,14 @@ resource "azurerm_key_vault_secret" "toursdb" {
 # The Redis cache layer.
 
 resource "azurerm_redis_cache" "wwt" {
-  name                = "${var.oldPrefix}-cache"
-  location            = azurerm_resource_group.coreapp.location
-  resource_group_name = azurerm_resource_group.coreapp.name
-  capacity            = 2
-  family              = "C"
-  sku_name            = "Basic"
-  enable_non_ssl_port = false
-  minimum_tls_version = "1.2"
-
-  redis_configuration {
-  }
+  name                 = "${var.oldPrefix}-cache"
+  location             = azurerm_resource_group.coreapp.location
+  resource_group_name  = azurerm_resource_group.coreapp.name
+  capacity             = 2
+  family               = "C"
+  sku_name             = "Basic"
+  non_ssl_port_enabled = false
+  minimum_tls_version  = "1.2"
 }
 
 resource "azurerm_key_vault_secret" "redis" {
