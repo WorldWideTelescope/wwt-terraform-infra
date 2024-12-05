@@ -175,6 +175,39 @@ resource "azurerm_key_vault_secret" "redis" {
   }
 }
 
+# The Application Insights APM layer.
+
+resource "azurerm_application_insights" "prod" {
+  name                = "${var.oldPrefix}-data-app"
+  location            = azurerm_resource_group.coreapp_linux.location
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
+
+  workspace_id        = azurerm_log_analytics_workspace.wwt.id
+  application_type    = "web"
+  sampling_percentage = 0
+}
+
+resource "azurerm_application_insights" "staging" {
+  name                = "${var.oldPrefix}-data-app-staging"
+  location            = azurerm_resource_group.coreapp_linux.location
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
+
+  workspace_id        = azurerm_log_analytics_workspace.wwt.id
+  application_type    = "web"
+  sampling_percentage = 0
+}
+
+resource "azurerm_log_analytics_workspace" "wwt" {
+  name                = var.legacyNameLogAnalyticsWorkspace
+  location            = azurerm_resource_group.log_analytics.location
+  resource_group_name = azurerm_resource_group.log_analytics.name
+}
+
+resource "azurerm_resource_group" "log_analytics" {
+  name     = var.legacyNameLogAnalyticsGroup
+  location = var.location
+}
+
 # App service plan for the Linux-based apps. This includes the
 # core data services.
 
@@ -314,8 +347,9 @@ resource "azurerm_linux_web_app" "data" {
   # Docker container: aasworldwidetelescope/core-data:latest
 
   site_config {
-    always_on        = true
-    app_command_line = ""
+    always_on         = true
+    app_command_line  = ""
+    health_check_path = "/"
 
     # Added 2022 Sep to match ground truth:
     ftps_state              = "AllAllowed"
@@ -327,13 +361,49 @@ resource "azurerm_linux_web_app" "data" {
   }
 
   app_settings = {
-    "APPINSIGHTS_INSTRUMENTATIONKEY"      = "gone"
-    "DOCKER_REGISTRY_SERVER_URL"          = "https://index.docker.io"
-    "KeyVaultName"                        = azurerm_key_vault.coreapp.name
-    "SlidingExpiration"                   = "30.00:00:00" # default to 30 days to keep cached items
-    "UseAzurePlateFiles"                  = "true"
-    "UseCaching"                          = "true"
-    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
+    "APPINSIGHTS_INSTRUMENTATIONKEY"                  = azurerm_application_insights.prod.instrumentation_key
+    "APPINSIGHTS_PROFILERFEATURE_VERSION"             = "1.0.0"
+    "APPINSIGHTS_SNAPSHOTFEATURE_VERSION"             = "1.0.0"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"           = azurerm_application_insights.prod.connection_string
+    "ApplicationInsightsAgent_EXTENSION_VERSION"      = "~3"
+    "DOCKER_REGISTRY_SERVER_URL"                      = "https://index.docker.io"
+    "DiagnosticServices_EXTENSION_VERSION"            = "~3"
+    "InstrumentationEngine_EXTENSION_VERSION"         = "disabled"
+    "KeyVaultName"                                    = azurerm_key_vault.coreapp.name
+    "SlidingExpiration"                               = "30.00:00:00" # default to 30 days to keep cached items
+    "SnapshotDebugger_EXTENSION_VERSION"              = "disabled"
+    "UseAzurePlateFiles"                              = "true"
+    "UseCaching"                                      = "true"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"             = "false"
+    "XDT_MicrosoftApplicationInsights_BaseExtensions" = "disabled"
+    "XDT_MicrosoftApplicationInsights_Mode"           = "recommended"
+    "XDT_MicrosoftApplicationInsights_PreemptSdk"     = "disabled"
+  }
+
+  sticky_settings {
+    app_setting_names = [
+      "APPINSIGHTS_INSTRUMENTATIONKEY",
+      "APPINSIGHTS_PROFILERFEATURE_VERSION",
+      "APPINSIGHTS_SNAPSHOTFEATURE_VERSION",
+      "APPLICATIONINSIGHTS_CONFIGURATION_CONTENT",
+      "ApplicationInsightsAgent_EXTENSION_VERSION",
+      "DiagnosticServices_EXTENSION_VERSION",
+      "InstrumentationEngine_EXTENSION_VERSION",
+      "SnapshotDebugger_EXTENSION_VERSION",
+      "WEBSITES_PORT",
+      "XDT_MicrosoftApplicationInsights_BaseExtensions",
+      "XDT_MicrosoftApplicationInsights_Mode",
+      "XDT_MicrosoftApplicationInsights_PreemptSdk",
+      "APPLICATIONINSIGHTS_CONNECTION_STRING ",
+      "XDT_MicrosoftApplicationInsightsJava",
+      "XDT_MicrosoftApplicationInsights_NodeJS",
+    ]
+  }
+
+  tags = {
+    "hidden-link: /app-insights-conn-string"         = azurerm_application_insights.prod.connection_string
+    "hidden-link: /app-insights-instrumentation-key" = azurerm_application_insights.prod.instrumentation_key
+    "hidden-link: /app-insights-resource-id"         = replace(azurerm_application_insights.prod.id, "Microsoft.Insights", "microsoft.insights")
   }
 
   identity {
@@ -350,16 +420,59 @@ resource "azurerm_linux_web_app_slot" "data_stage" {
   # Docker container: aasworldwidetelescope/core-data:latest
 
   site_config {
-    always_on        = false
-    app_command_line = ""
+    always_on         = false
+    app_command_line  = ""
+    health_check_path = "/"
 
     # Added 2022 Sep to match ground truth:
     ftps_state              = "AllAllowed"
     scm_minimum_tls_version = "1.0"
     use_32_bit_worker       = false
+
+    ip_restriction_default_action     = "Allow"
+    scm_ip_restriction_default_action = "Allow"
   }
 
-  app_settings = azurerm_linux_web_app.data.app_settings
+  app_settings = {
+    "APPINSIGHTS_INSTRUMENTATIONKEY"                  = azurerm_application_insights.staging.instrumentation_key
+    "APPINSIGHTS_PROFILERFEATURE_VERSION"             = "1.0.0"
+    "APPINSIGHTS_SNAPSHOTFEATURE_VERSION"             = "1.0.0"
+    "APPLICATIONINSIGHTS_CONFIGURATION_CONTENT"       = null
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"           = azurerm_application_insights.staging.connection_string
+    "ApplicationInsightsAgent_EXTENSION_VERSION"      = "~3"
+    "DOCKER_ENABLE_CI"                                = "true"
+    "DOCKER_REGISTRY_SERVER_URL"                      = "https://index.docker.io/v1"
+    "DiagnosticServices_EXTENSION_VERSION"            = "~3"
+    "InstrumentationEngine_EXTENSION_VERSION"         = "disabled"
+    "KeyVaultName"                                    = azurerm_key_vault.coreapp.name
+    "SlidingExpiration"                               = "30.00:00:00" # default to 30 days to keep cached items
+    "SnapshotDebugger_EXTENSION_VERSION"              = "disabled"
+    "UseAzurePlateFiles"                              = "true"
+    "UseCaching"                                      = "true"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"             = "false"
+    "WEBSITES_PORT"                                   = "8080"
+    "XDT_MicrosoftApplicationInsights_BaseExtensions" = "disabled"
+    "XDT_MicrosoftApplicationInsights_Mode"           = "recommended"
+    "XDT_MicrosoftApplicationInsights_PreemptSdk"     = "disabled"
+  }
+
+  logs {
+    detailed_error_messages = false
+    failed_request_tracing  = false
+
+    http_logs {
+      file_system {
+        retention_in_days = 7
+        retention_in_mb   = 35
+      }
+    }
+  }
+
+  tags = {
+    "hidden-link: /app-insights-conn-string"         = azurerm_application_insights.staging.connection_string
+    "hidden-link: /app-insights-instrumentation-key" = azurerm_application_insights.staging.instrumentation_key
+    "hidden-link: /app-insights-resource-id"         = replace(azurerm_application_insights.staging.id, "Microsoft.Insights", "microsoft.insights")
+  }
 
   identity {
     type = "SystemAssigned"
