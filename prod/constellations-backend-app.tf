@@ -7,7 +7,7 @@ resource "azurerm_linux_web_app" "cx_backend" {
   service_plan_id     = azurerm_service_plan.cx_backend.id
 
   app_settings = {
-    "AZURE_COSMOS_CONNECTIONSTRING" = azurerm_cosmosdb_account.cx_backend.connection_strings[0]
+    "AZURE_COSMOS_CONNECTIONSTRING" = azurerm_cosmosdb_account.cx_backend.primary_mongodb_connection_string
     "CX_PREVIEW_BASE_URL"           = "https://${azurerm_cdn_endpoint_custom_domain.cxdata.host_name}/previews"
     "CX_PREVIEW_SERVICE_URL"        = "http://${azurerm_private_dns_a_record.cx_previewer_server.name}.azurewebsites.net"
     "CX_SESSION_SECRETS"            = var.sessionSecrets

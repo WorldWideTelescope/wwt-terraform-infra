@@ -44,7 +44,7 @@ resource "azurerm_linux_web_app" "cx_previewer" {
 
   app_settings = {
     "CONSTELLATIONS_MAX_THREADS"      = "2"
-    "MONGO_CONNECTION_STRING"         = azurerm_cosmosdb_account.cx_backend.connection_strings[0]
+    "MONGO_CONNECTION_STRING"         = azurerm_cosmosdb_account.cx_backend.primary_mongodb_connection_string
     "AZURE_STORAGE_CONNECTION_STRING" = azurerm_storage_account.constellations.primary_connection_string
     "NUXT_PUBLIC_API_URL"             = "https://api.${var.tld}"
     #"CX_PREVIEW_DUMPIO"               = "true"
