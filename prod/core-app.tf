@@ -324,6 +324,9 @@ resource "azurerm_linux_web_app" "data" {
     ftps_state              = "AllAllowed"
     scm_minimum_tls_version = "1.0"
     use_32_bit_worker       = false
+
+    ip_restriction_default_action     = "Allow"
+    scm_ip_restriction_default_action = "Allow"
   }
 
   app_settings = {
@@ -399,6 +402,9 @@ resource "azurerm_linux_web_app" "core_proxy" {
     ftps_state              = "AllAllowed"
     scm_minimum_tls_version = "1.0"
     use_32_bit_worker       = false
+
+    ip_restriction_default_action     = "Allow"
+    scm_ip_restriction_default_action = "Allow"
   }
 
   logs {
@@ -443,6 +449,9 @@ resource "azurerm_linux_web_app" "core_nginx" {
     ftps_state              = "AllAllowed"
     scm_minimum_tls_version = "1.0"
     use_32_bit_worker       = false
+
+    ip_restriction_default_action     = "Allow"
+    scm_ip_restriction_default_action = "Allow"
   }
 }
 
@@ -555,6 +564,9 @@ resource "azurerm_windows_web_app" "communities" {
     ftps_state              = "AllAllowed"
     scm_minimum_tls_version = "1.0"
     use_32_bit_worker       = false
+
+    ip_restriction_default_action     = "Allow"
+    scm_ip_restriction_default_action = "Allow"
   }
 
   app_settings = {
@@ -618,6 +630,10 @@ resource "azurerm_windows_web_app_slot" "communities_stage" {
     # Added to reflect ground truth, 2022-Sep:
     ftps_state              = "AllAllowed"
     scm_minimum_tls_version = "1.0"
+
+    ip_restriction_default_action     = "Allow"
+    scm_ip_restriction_default_action = "Allow"
+
     virtual_application {
       physical_path = "site\\wwwroot"
       preload       = false

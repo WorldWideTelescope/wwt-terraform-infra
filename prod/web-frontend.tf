@@ -214,6 +214,10 @@ resource "azurerm_application_gateway" "frontend" {
     protocol                                  = "Http"
     path                                      = "/auth/"
     unhealthy_threshold                       = 3
+
+    match {
+      status_code = ["200-399"]
+    }
   }
 
   # Request routing rules

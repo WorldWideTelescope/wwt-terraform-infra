@@ -57,6 +57,9 @@ resource "azurerm_linux_web_app" "cx_previewer" {
     vnet_route_all_enabled = true
     app_command_line       = "node server/dist/server.js"
 
+    ip_restriction_default_action     = "Allow"
+    scm_ip_restriction_default_action = "Allow"
+
     application_stack {
       docker_image_name   = "aasworldwidetelescope/constellations-previewer:latest"
       docker_registry_url = "https://index.docker.io"

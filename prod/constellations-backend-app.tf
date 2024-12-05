@@ -20,6 +20,9 @@ resource "azurerm_linux_web_app" "cx_backend" {
     ftps_state             = "FtpsOnly"
     vnet_route_all_enabled = true
     app_command_line       = "yarn start"
+
+    ip_restriction_default_action     = "Allow"
+    scm_ip_restriction_default_action = "Allow"
   }
 
   logs {
@@ -51,6 +54,9 @@ resource "azurerm_linux_web_app_slot" "cx_backend_stage" {
     ftps_state             = "FtpsOnly"
     vnet_route_all_enabled = true
     app_command_line       = "yarn start"
+
+    ip_restriction_default_action     = "Allow"
+    scm_ip_restriction_default_action = "Allow"
   }
 
   logs {

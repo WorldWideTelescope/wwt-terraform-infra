@@ -33,6 +33,9 @@ resource "azurerm_linux_web_app" "keycloak" {
     vnet_route_all_enabled = true
     app_command_line       = "start"
 
+    ip_restriction_default_action     = "Allow"
+    scm_ip_restriction_default_action = "Allow"
+
     application_stack {
       docker_image_name   = "keycloak/keycloak:25.0.2"
       docker_registry_url = "https://quay.io"

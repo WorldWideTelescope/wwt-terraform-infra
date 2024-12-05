@@ -31,6 +31,9 @@ resource "azurerm_linux_web_app" "cx_frontend" {
     # running `.bin/nuxt` because it doesn't realize that it should be treated
     # as an `.mjs` file.
     app_command_line = "node node_modules/nuxt/bin/nuxt.mjs start"
+
+    ip_restriction_default_action     = "Allow"
+    scm_ip_restriction_default_action = "Allow"
   }
 }
 
