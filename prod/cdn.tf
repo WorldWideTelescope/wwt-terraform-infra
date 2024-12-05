@@ -80,7 +80,7 @@ resource "azurerm_dns_cname_record" "assets_web" {
   resource_group_name = azurerm_dns_zone.assets.resource_group_name
   zone_name           = azurerm_dns_zone.assets.name
   ttl                 = 3600
-  target_resource_id  = azurerm_cdn_endpoint.web.id
+  target_resource_id  = replace(azurerm_cdn_endpoint.web.id, "resourcegroups", "resourceGroups")
 }
 
 
@@ -132,7 +132,7 @@ resource "azurerm_dns_cname_record" "assets_data1" {
   resource_group_name = azurerm_dns_zone.assets.resource_group_name
   zone_name           = azurerm_dns_zone.assets.name
   ttl                 = 3600
-  target_resource_id  = azurerm_cdn_endpoint.data1.id
+  target_resource_id  = replace(azurerm_cdn_endpoint.data1.id, "resourcegroups", "resourceGroups")
 }
 
 # cx.wwtassets.org

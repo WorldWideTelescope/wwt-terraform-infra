@@ -211,7 +211,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
   name                = "${var.oldPrefix}-data-autoscaling"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  target_resource_id  = azurerm_service_plan.data.id
+  target_resource_id  = replace(azurerm_service_plan.data.id, "serverFarms", "serverfarms")
 
   profile {
     name = "defaultProfile"
@@ -227,7 +227,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     rule {
       metric_trigger {
         metric_name        = "CpuPercentage"
-        metric_resource_id = azurerm_service_plan.data.id
+        metric_resource_id = replace(azurerm_service_plan.data.id, "serverFarms", "serverfarms")
         statistic          = "Average"
         time_grain         = "PT1M"
         time_aggregation   = "Average"
@@ -247,7 +247,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     rule {
       metric_trigger {
         metric_name        = "CpuPercentage"
-        metric_resource_id = azurerm_service_plan.data.id
+        metric_resource_id = replace(azurerm_service_plan.data.id, "serverFarms", "serverfarms")
         statistic          = "Average"
         time_grain         = "PT1M"
         time_aggregation   = "Average"
@@ -269,7 +269,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     rule {
       metric_trigger {
         metric_name        = "HttpQueueLength"
-        metric_resource_id = azurerm_service_plan.data.id
+        metric_resource_id = replace(azurerm_service_plan.data.id, "serverFarms", "serverfarms")
         statistic          = "Average"
         time_grain         = "PT1M"
         time_aggregation   = "Average"
@@ -289,7 +289,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     rule {
       metric_trigger {
         metric_name        = "HttpQueueLength"
-        metric_resource_id = azurerm_service_plan.data.id
+        metric_resource_id = replace(azurerm_service_plan.data.id, "serverFarms", "serverfarms")
         statistic          = "Average"
         time_grain         = "PT1M"
         time_aggregation   = "Average"
