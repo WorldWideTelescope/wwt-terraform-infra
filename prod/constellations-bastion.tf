@@ -16,10 +16,11 @@
 # hints about how to admin the previewer.
 
 resource "azurerm_subnet" "cx_bastion" {
-  name                 = "${var.prefix}-cxbastion"
-  resource_group_name  = azurerm_resource_group.cx_backend.name
-  virtual_network_name = azurerm_virtual_network.cx_backend.name
-  address_prefixes     = ["10.0.220.0/24"]
+  name                              = "${var.prefix}-cxbastion"
+  resource_group_name               = azurerm_resource_group.cx_backend.name
+  virtual_network_name              = azurerm_virtual_network.cx_backend.name
+  address_prefixes                  = ["10.0.220.0/24"]
+  private_endpoint_network_policies = "Enabled" # added 2024 Dec to match ground truth
 }
 
 resource "azurerm_public_ip" "cx_bastion" {
@@ -27,6 +28,7 @@ resource "azurerm_public_ip" "cx_bastion" {
   resource_group_name = azurerm_resource_group.cx_backend.name
   location            = azurerm_resource_group.cx_backend.location
   allocation_method   = "Static"
+  sku                 = "Basic"
   domain_name_label   = "${var.prefix}cxb"
 
   lifecycle {

@@ -344,12 +344,17 @@ resource "azurerm_linux_web_app" "data" {
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
   service_plan_id     = azurerm_service_plan.data.id
-  # Docker container: aasworldwidetelescope/core-data:latest
 
   site_config {
-    always_on         = true
-    app_command_line  = ""
-    health_check_path = "/"
+    always_on                         = true
+    app_command_line                  = ""
+    health_check_path                 = "/"
+    health_check_eviction_time_in_min = 2
+
+    application_stack {
+      docker_image_name   = "aasworldwidetelescope/core-data:latest"
+      docker_registry_url = "https://index.docker.io"
+    }
 
     # Added 2022 Sep to match ground truth:
     ftps_state              = "AllAllowed"
@@ -363,7 +368,6 @@ resource "azurerm_linux_web_app" "data" {
     "APPINSIGHTS_SNAPSHOTFEATURE_VERSION"             = "1.0.0"
     "APPLICATIONINSIGHTS_CONNECTION_STRING"           = azurerm_application_insights.prod.connection_string
     "ApplicationInsightsAgent_EXTENSION_VERSION"      = "~3"
-    "DOCKER_REGISTRY_SERVER_URL"                      = "https://index.docker.io"
     "DiagnosticServices_EXTENSION_VERSION"            = "~3"
     "InstrumentationEngine_EXTENSION_VERSION"         = "disabled"
     "KeyVaultName"                                    = azurerm_key_vault.coreapp.name
@@ -414,12 +418,17 @@ resource "azurerm_linux_web_app" "data" {
 resource "azurerm_linux_web_app_slot" "data_stage" {
   name           = "stage"
   app_service_id = azurerm_linux_web_app.data.id
-  # Docker container: aasworldwidetelescope/core-data:latest
 
   site_config {
-    always_on         = false
-    app_command_line  = ""
-    health_check_path = "/"
+    always_on                         = false
+    app_command_line                  = ""
+    health_check_path                 = "/"
+    health_check_eviction_time_in_min = 2
+
+    application_stack {
+      docker_image_name   = "aasworldwidetelescope/core-data:staging"
+      docker_registry_url = "https://index.docker.io/v1"
+    }
 
     # Added 2022 Sep to match ground truth:
     ftps_state              = "AllAllowed"
@@ -435,7 +444,6 @@ resource "azurerm_linux_web_app_slot" "data_stage" {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"           = azurerm_application_insights.staging.connection_string
     "ApplicationInsightsAgent_EXTENSION_VERSION"      = "~3"
     "DOCKER_ENABLE_CI"                                = "true"
-    "DOCKER_REGISTRY_SERVER_URL"                      = "https://index.docker.io/v1"
     "DiagnosticServices_EXTENSION_VERSION"            = "~3"
     "InstrumentationEngine_EXTENSION_VERSION"         = "disabled"
     "KeyVaultName"                                    = azurerm_key_vault.coreapp.name
@@ -537,14 +545,18 @@ resource "azurerm_linux_web_app" "core_nginx" {
   # Docker container: aasworldwidetelescope/nginx-core:latest
 
   app_settings = {
-    "PUBLIC_FACING_DOMAIN_NAME"  = "worldwidetelescope.org"
-    "DOCKER_ENABLE_CI"           = "true"
-    "DOCKER_REGISTRY_SERVER_URL" = "https://index.docker.io/v1"
+    "PUBLIC_FACING_DOMAIN_NAME" = "worldwidetelescope.org"
+    "DOCKER_ENABLE_CI"          = "true"
   }
 
   site_config {
     always_on        = false
     app_command_line = ""
+
+    application_stack {
+      docker_image_name   = "aasworldwidetelescope/nginx-core:latest"
+      docker_registry_url = "https://index.docker.io/v1"
+    }
 
     # Added 2022 Sep to match ground truth:
     ftps_state              = "AllAllowed"

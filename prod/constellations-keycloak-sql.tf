@@ -35,10 +35,11 @@ resource "azurerm_postgresql_database" "keycloak" {
 # Supporting vnet/private-endpoint stuff
 
 resource "azurerm_subnet" "cx_backend_sql" {
-  name                 = "${var.prefix}-cxbeSqlSubnet"
-  resource_group_name  = azurerm_resource_group.cx_backend.name
-  virtual_network_name = azurerm_virtual_network.cx_backend.name
-  address_prefixes     = ["10.0.4.0/24"]
+  name                              = "${var.prefix}-cxbeSqlSubnet"
+  resource_group_name               = azurerm_resource_group.cx_backend.name
+  virtual_network_name              = azurerm_virtual_network.cx_backend.name
+  address_prefixes                  = ["10.0.4.0/24"]
+  private_endpoint_network_policies = "Enabled" # added 2024 Dec to match ground truth
 }
 
 resource "azurerm_private_dns_zone" "cx_sql" {
