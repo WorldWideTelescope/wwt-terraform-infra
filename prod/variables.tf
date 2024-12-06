@@ -86,6 +86,14 @@ variable "legacyNameWwtwebstaticStorage" {
   description = "The name to use for the 'legacy' storage account equivalent to 'wwtwebstatic' in production"
 }
 
+variable "legacyNameLogAnalyticsWorkspace" {
+  description = "The name to use for the log analytics workspace"
+}
+
+variable "legacyNameLogAnalyticsGroup" {
+  description = "The name to use for the log analytics resource group"
+}
+
 // Other configuration.
 
 variable "liveClientId" {

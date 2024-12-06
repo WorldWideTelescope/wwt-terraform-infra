@@ -1,5 +1,52 @@
 # The CDN layer
 
+locals {
+  # Enshrining ground truth configuration, 2024 December
+  legacy_compress_settings = [
+    "application/eot",
+    "application/font",
+    "application/font-sfnt",
+    "application/javascript",
+    "application/json",
+    "application/opentype",
+    "application/otf",
+    "application/pkcs7-mime",
+    "application/truetype",
+    "application/ttf",
+    "application/vnd.ms-fontobject",
+    "application/x-font-opentype",
+    "application/x-font-truetype",
+    "application/x-font-ttf",
+    "application/x-httpd-cgi",
+    "application/x-javascript",
+    "application/x-mpegurl",
+    "application/x-opentype",
+    "application/x-otf",
+    "application/x-perl",
+    "application/x-ttf",
+    "application/xhtml+xml",
+    "application/xml",
+    "application/xml+rss",
+    "font/eot",
+    "font/opentype",
+    "font/otf",
+    "font/ttf",
+    "image/svg+xml",
+    "text/css",
+    "text/csv",
+    "text/html",
+    "text/javascript",
+    "text/js",
+    "text/plain",
+    "text/richtext",
+    "text/tab-separated-values",
+    "text/x-component",
+    "text/x-java-source",
+    "text/x-script",
+    "text/xml",
+  ]
+}
+
 resource "azurerm_cdn_profile" "main" {
   name                = "wwt-cdn-01"
   resource_group_name = azurerm_resource_group.web_frontend_legacy.name
@@ -20,6 +67,7 @@ resource "azurerm_cdn_endpoint" "web" {
   location            = "global"
 
   is_compression_enabled        = true
+  content_types_to_compress     = local.legacy_compress_settings
   optimization_type             = "GeneralWebDelivery"
   origin_host_header            = azurerm_storage_account.permanent_data_staticweb.primary_web_host
   querystring_caching_behaviour = "UseQueryString"
@@ -80,7 +128,7 @@ resource "azurerm_dns_cname_record" "assets_web" {
   resource_group_name = azurerm_dns_zone.assets.resource_group_name
   zone_name           = azurerm_dns_zone.assets.name
   ttl                 = 3600
-  target_resource_id  = azurerm_cdn_endpoint.web.id
+  target_resource_id  = replace(azurerm_cdn_endpoint.web.id, "resourcegroups", "resourceGroups")
 }
 
 
@@ -92,9 +140,10 @@ resource "azurerm_cdn_endpoint" "data1" {
   resource_group_name = azurerm_resource_group.web_frontend_legacy.name
   location            = "global"
 
-  is_compression_enabled = true
-  optimization_type      = "GeneralWebDelivery"
-  origin_host_header     = azurerm_storage_account.permanent_data_core.primary_blob_host
+  is_compression_enabled    = true
+  content_types_to_compress = local.legacy_compress_settings
+  optimization_type         = "GeneralWebDelivery"
+  origin_host_header        = azurerm_storage_account.permanent_data_core.primary_blob_host
 
   origin {
     name      = "wwtfiles-blob-core-windows-net"
@@ -132,7 +181,7 @@ resource "azurerm_dns_cname_record" "assets_data1" {
   resource_group_name = azurerm_dns_zone.assets.resource_group_name
   zone_name           = azurerm_dns_zone.assets.name
   ttl                 = 3600
-  target_resource_id  = azurerm_cdn_endpoint.data1.id
+  target_resource_id  = replace(azurerm_cdn_endpoint.data1.id, "resourcegroups", "resourceGroups")
 }
 
 # cx.wwtassets.org
@@ -214,10 +263,11 @@ resource "azurerm_cdn_endpoint" "webdocs" {
   resource_group_name = azurerm_resource_group.web_frontend_legacy.name
   location            = "global"
 
-  is_compression_enabled = true
-  optimization_type      = "GeneralWebDelivery"
-  origin_host_header     = azurerm_storage_account.permanent_data_staticweb.primary_web_host
-  origin_path            = "/_docs"
+  is_compression_enabled    = true
+  content_types_to_compress = local.legacy_compress_settings
+  optimization_type         = "GeneralWebDelivery"
+  origin_host_header        = azurerm_storage_account.permanent_data_staticweb.primary_web_host
+  origin_path               = "/_docs"
 
   origin {
     name      = "wwtwebstatic-z22-web-core-windows-net"
@@ -254,10 +304,11 @@ resource "azurerm_cdn_endpoint" "embed" {
   resource_group_name = azurerm_resource_group.web_frontend_legacy.name
   location            = "global"
 
-  is_compression_enabled = true
-  optimization_type      = "GeneralWebDelivery"
-  origin_host_header     = azurerm_storage_account.permanent_data_staticweb.primary_web_host
-  origin_path            = "/_embedui/"
+  is_compression_enabled    = true
+  content_types_to_compress = local.legacy_compress_settings
+  optimization_type         = "GeneralWebDelivery"
+  origin_host_header        = azurerm_storage_account.permanent_data_staticweb.primary_web_host
+  origin_path               = "/_embedui/"
 
   origin {
     name      = "wwtwebstatic-z22-web-core-windows-net"
@@ -295,6 +346,7 @@ resource "azurerm_cdn_endpoint" "general" {
   location            = "global"
 
   is_compression_enabled        = true
+  content_types_to_compress     = local.legacy_compress_settings
   optimization_type             = "GeneralWebDelivery"
   origin_host_header            = "worldwidetelescope.org"
   querystring_caching_behaviour = "UseQueryString"

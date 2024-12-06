@@ -7,7 +7,7 @@ resource "azurerm_linux_web_app" "cx_backend" {
   service_plan_id     = azurerm_service_plan.cx_backend.id
 
   app_settings = {
-    "AZURE_COSMOS_CONNECTIONSTRING" = azurerm_cosmosdb_account.cx_backend.connection_strings[0]
+    "AZURE_COSMOS_CONNECTIONSTRING" = azurerm_cosmosdb_account.cx_backend.primary_mongodb_connection_string
     "CX_PREVIEW_BASE_URL"           = "https://${azurerm_cdn_endpoint_custom_domain.cxdata.host_name}/previews"
     "CX_PREVIEW_SERVICE_URL"        = "http://${azurerm_private_dns_a_record.cx_previewer_server.name}.azurewebsites.net"
     "CX_SESSION_SECRETS"            = var.sessionSecrets
@@ -102,10 +102,11 @@ resource "azurerm_app_service_certificate_binding" "cx_backend" {
 # Let the app talk with the support services
 
 resource "azurerm_subnet" "cx_backend_app" {
-  name                 = "${var.prefix}-cxbeAppSubnet"
-  resource_group_name  = azurerm_resource_group.cx_backend.name
-  virtual_network_name = azurerm_virtual_network.cx_backend.name
-  address_prefixes     = ["10.0.2.0/24"]
+  name                              = "${var.prefix}-cxbeAppSubnet"
+  resource_group_name               = azurerm_resource_group.cx_backend.name
+  virtual_network_name              = azurerm_virtual_network.cx_backend.name
+  address_prefixes                  = ["10.0.2.0/24"]
+  private_endpoint_network_policies = "Enabled" # added 2024 Dec to match ground truth
 
   delegation {
     name = "dlg-appServices"

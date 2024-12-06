@@ -44,7 +44,7 @@ resource "azurerm_linux_web_app" "cx_previewer" {
 
   app_settings = {
     "CONSTELLATIONS_MAX_THREADS"      = "2"
-    "MONGO_CONNECTION_STRING"         = azurerm_cosmosdb_account.cx_backend.connection_strings[0]
+    "MONGO_CONNECTION_STRING"         = azurerm_cosmosdb_account.cx_backend.primary_mongodb_connection_string
     "AZURE_STORAGE_CONNECTION_STRING" = azurerm_storage_account.constellations.primary_connection_string
     "NUXT_PUBLIC_API_URL"             = "https://api.${var.tld}"
     #"CX_PREVIEW_DUMPIO"               = "true"
@@ -93,10 +93,11 @@ resource "azurerm_service_plan" "cx_previewer" {
 # Supporting vnet/private-endpoint stuff
 
 resource "azurerm_subnet" "cx_previewer" {
-  name                 = "${var.prefix}-cxpv"
-  resource_group_name  = azurerm_resource_group.cx_backend.name
-  virtual_network_name = azurerm_virtual_network.cx_backend.name
-  address_prefixes     = ["10.0.10.0/24"]
+  name                              = "${var.prefix}-cxpv"
+  resource_group_name               = azurerm_resource_group.cx_backend.name
+  virtual_network_name              = azurerm_virtual_network.cx_backend.name
+  address_prefixes                  = ["10.0.10.0/24"]
+  private_endpoint_network_policies = "Enabled" # added 2024 Dec to match ground truth
 
   delegation {
     name = "dlg-appServices"

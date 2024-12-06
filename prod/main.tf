@@ -8,10 +8,12 @@
 #
 # - Remove `.terraform.lock.hcl`
 # - Update minimum version here
-# - Run `terraform init`
+# - Run `terraform init -upgrade`
 # - Run `terraform (plan|apply) -var-file=prod.tfvars -refresh-only`
 
 provider "azurerm" {
+  subscription_id = "581389a3-e46e-43a4-bef4-4d0c1c43e6a6"
+
   features {}
 }
 
@@ -21,7 +23,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "=3.77"
+      version = "=4.12"
     }
   }
 

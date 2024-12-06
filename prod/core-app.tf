@@ -154,17 +154,14 @@ resource "azurerm_key_vault_secret" "toursdb" {
 # The Redis cache layer.
 
 resource "azurerm_redis_cache" "wwt" {
-  name                = "${var.oldPrefix}-cache"
-  location            = azurerm_resource_group.coreapp.location
-  resource_group_name = azurerm_resource_group.coreapp.name
-  capacity            = 2
-  family              = "C"
-  sku_name            = "Basic"
-  enable_non_ssl_port = false
-  minimum_tls_version = "1.2"
-
-  redis_configuration {
-  }
+  name                 = "${var.oldPrefix}-cache"
+  location             = azurerm_resource_group.coreapp.location
+  resource_group_name  = azurerm_resource_group.coreapp.name
+  capacity             = 2
+  family               = "C"
+  sku_name             = "Basic"
+  non_ssl_port_enabled = false
+  minimum_tls_version  = "1.2"
 }
 
 resource "azurerm_key_vault_secret" "redis" {
@@ -176,6 +173,39 @@ resource "azurerm_key_vault_secret" "redis" {
   tags = {
     environment = "Production"
   }
+}
+
+# The Application Insights APM layer.
+
+resource "azurerm_application_insights" "prod" {
+  name                = "${var.oldPrefix}-data-app"
+  location            = azurerm_resource_group.coreapp_linux.location
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
+
+  workspace_id        = azurerm_log_analytics_workspace.wwt.id
+  application_type    = "web"
+  sampling_percentage = 0
+}
+
+resource "azurerm_application_insights" "staging" {
+  name                = "${var.oldPrefix}-data-app-staging"
+  location            = azurerm_resource_group.coreapp_linux.location
+  resource_group_name = azurerm_resource_group.coreapp_linux.name
+
+  workspace_id        = azurerm_log_analytics_workspace.wwt.id
+  application_type    = "web"
+  sampling_percentage = 0
+}
+
+resource "azurerm_log_analytics_workspace" "wwt" {
+  name                = var.legacyNameLogAnalyticsWorkspace
+  location            = azurerm_resource_group.log_analytics.location
+  resource_group_name = azurerm_resource_group.log_analytics.name
+}
+
+resource "azurerm_resource_group" "log_analytics" {
+  name     = var.legacyNameLogAnalyticsGroup
+  location = var.location
 }
 
 # App service plan for the Linux-based apps. This includes the
@@ -211,7 +241,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
   name                = "${var.oldPrefix}-data-autoscaling"
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
-  target_resource_id  = azurerm_service_plan.data.id
+  target_resource_id  = replace(azurerm_service_plan.data.id, "serverFarms", "serverfarms")
 
   profile {
     name = "defaultProfile"
@@ -227,7 +257,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     rule {
       metric_trigger {
         metric_name        = "CpuPercentage"
-        metric_resource_id = azurerm_service_plan.data.id
+        metric_resource_id = replace(azurerm_service_plan.data.id, "serverFarms", "serverfarms")
         statistic          = "Average"
         time_grain         = "PT1M"
         time_aggregation   = "Average"
@@ -247,7 +277,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     rule {
       metric_trigger {
         metric_name        = "CpuPercentage"
-        metric_resource_id = azurerm_service_plan.data.id
+        metric_resource_id = replace(azurerm_service_plan.data.id, "serverFarms", "serverfarms")
         statistic          = "Average"
         time_grain         = "PT1M"
         time_aggregation   = "Average"
@@ -269,7 +299,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     rule {
       metric_trigger {
         metric_name        = "HttpQueueLength"
-        metric_resource_id = azurerm_service_plan.data.id
+        metric_resource_id = replace(azurerm_service_plan.data.id, "serverFarms", "serverfarms")
         statistic          = "Average"
         time_grain         = "PT1M"
         time_aggregation   = "Average"
@@ -289,7 +319,7 @@ resource "azurerm_monitor_autoscale_setting" "data" {
     rule {
       metric_trigger {
         metric_name        = "HttpQueueLength"
-        metric_resource_id = azurerm_service_plan.data.id
+        metric_resource_id = replace(azurerm_service_plan.data.id, "serverFarms", "serverfarms")
         statistic          = "Average"
         time_grain         = "PT1M"
         time_aggregation   = "Average"
@@ -314,11 +344,17 @@ resource "azurerm_linux_web_app" "data" {
   location            = azurerm_resource_group.coreapp_linux.location
   resource_group_name = azurerm_resource_group.coreapp_linux.name
   service_plan_id     = azurerm_service_plan.data.id
-  # Docker container: aasworldwidetelescope/core-data:latest
 
   site_config {
-    always_on        = true
-    app_command_line = ""
+    always_on                         = true
+    app_command_line                  = ""
+    health_check_path                 = "/"
+    health_check_eviction_time_in_min = 2
+
+    application_stack {
+      docker_image_name   = "aasworldwidetelescope/core-data:latest"
+      docker_registry_url = "https://index.docker.io"
+    }
 
     # Added 2022 Sep to match ground truth:
     ftps_state              = "AllAllowed"
@@ -327,13 +363,48 @@ resource "azurerm_linux_web_app" "data" {
   }
 
   app_settings = {
-    "APPINSIGHTS_INSTRUMENTATIONKEY"      = "gone"
-    "DOCKER_REGISTRY_SERVER_URL"          = "https://index.docker.io"
-    "KeyVaultName"                        = azurerm_key_vault.coreapp.name
-    "SlidingExpiration"                   = "30.00:00:00" # default to 30 days to keep cached items
-    "UseAzurePlateFiles"                  = "true"
-    "UseCaching"                          = "true"
-    "WEBSITES_ENABLE_APP_SERVICE_STORAGE" = "false"
+    "APPINSIGHTS_INSTRUMENTATIONKEY"                  = azurerm_application_insights.prod.instrumentation_key
+    "APPINSIGHTS_PROFILERFEATURE_VERSION"             = "1.0.0"
+    "APPINSIGHTS_SNAPSHOTFEATURE_VERSION"             = "1.0.0"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"           = azurerm_application_insights.prod.connection_string
+    "ApplicationInsightsAgent_EXTENSION_VERSION"      = "~3"
+    "DiagnosticServices_EXTENSION_VERSION"            = "~3"
+    "InstrumentationEngine_EXTENSION_VERSION"         = "disabled"
+    "KeyVaultName"                                    = azurerm_key_vault.coreapp.name
+    "SlidingExpiration"                               = "30.00:00:00" # default to 30 days to keep cached items
+    "SnapshotDebugger_EXTENSION_VERSION"              = "disabled"
+    "UseAzurePlateFiles"                              = "true"
+    "UseCaching"                                      = "true"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"             = "false"
+    "XDT_MicrosoftApplicationInsights_BaseExtensions" = "disabled"
+    "XDT_MicrosoftApplicationInsights_Mode"           = "recommended"
+    "XDT_MicrosoftApplicationInsights_PreemptSdk"     = "disabled"
+  }
+
+  sticky_settings {
+    app_setting_names = [
+      "APPINSIGHTS_INSTRUMENTATIONKEY",
+      "APPINSIGHTS_PROFILERFEATURE_VERSION",
+      "APPINSIGHTS_SNAPSHOTFEATURE_VERSION",
+      "APPLICATIONINSIGHTS_CONFIGURATION_CONTENT",
+      "ApplicationInsightsAgent_EXTENSION_VERSION",
+      "DiagnosticServices_EXTENSION_VERSION",
+      "InstrumentationEngine_EXTENSION_VERSION",
+      "SnapshotDebugger_EXTENSION_VERSION",
+      "WEBSITES_PORT",
+      "XDT_MicrosoftApplicationInsights_BaseExtensions",
+      "XDT_MicrosoftApplicationInsights_Mode",
+      "XDT_MicrosoftApplicationInsights_PreemptSdk",
+      "APPLICATIONINSIGHTS_CONNECTION_STRING ",
+      "XDT_MicrosoftApplicationInsightsJava",
+      "XDT_MicrosoftApplicationInsights_NodeJS",
+    ]
+  }
+
+  tags = {
+    "hidden-link: /app-insights-conn-string"         = azurerm_application_insights.prod.connection_string
+    "hidden-link: /app-insights-instrumentation-key" = azurerm_application_insights.prod.instrumentation_key
+    "hidden-link: /app-insights-resource-id"         = replace(azurerm_application_insights.prod.id, "Microsoft.Insights", "microsoft.insights")
   }
 
   identity {
@@ -347,11 +418,17 @@ resource "azurerm_linux_web_app" "data" {
 resource "azurerm_linux_web_app_slot" "data_stage" {
   name           = "stage"
   app_service_id = azurerm_linux_web_app.data.id
-  # Docker container: aasworldwidetelescope/core-data:latest
 
   site_config {
-    always_on        = false
-    app_command_line = ""
+    always_on                         = false
+    app_command_line                  = ""
+    health_check_path                 = "/"
+    health_check_eviction_time_in_min = 2
+
+    application_stack {
+      docker_image_name   = "aasworldwidetelescope/core-data:staging"
+      docker_registry_url = "https://index.docker.io/v1"
+    }
 
     # Added 2022 Sep to match ground truth:
     ftps_state              = "AllAllowed"
@@ -359,7 +436,45 @@ resource "azurerm_linux_web_app_slot" "data_stage" {
     use_32_bit_worker       = false
   }
 
-  app_settings = azurerm_linux_web_app.data.app_settings
+  app_settings = {
+    "APPINSIGHTS_INSTRUMENTATIONKEY"                  = azurerm_application_insights.staging.instrumentation_key
+    "APPINSIGHTS_PROFILERFEATURE_VERSION"             = "1.0.0"
+    "APPINSIGHTS_SNAPSHOTFEATURE_VERSION"             = "1.0.0"
+    "APPLICATIONINSIGHTS_CONFIGURATION_CONTENT"       = null
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"           = azurerm_application_insights.staging.connection_string
+    "ApplicationInsightsAgent_EXTENSION_VERSION"      = "~3"
+    "DOCKER_ENABLE_CI"                                = "true"
+    "DiagnosticServices_EXTENSION_VERSION"            = "~3"
+    "InstrumentationEngine_EXTENSION_VERSION"         = "disabled"
+    "KeyVaultName"                                    = azurerm_key_vault.coreapp.name
+    "SlidingExpiration"                               = "30.00:00:00" # default to 30 days to keep cached items
+    "SnapshotDebugger_EXTENSION_VERSION"              = "disabled"
+    "UseAzurePlateFiles"                              = "true"
+    "UseCaching"                                      = "true"
+    "WEBSITES_ENABLE_APP_SERVICE_STORAGE"             = "false"
+    "WEBSITES_PORT"                                   = "8080"
+    "XDT_MicrosoftApplicationInsights_BaseExtensions" = "disabled"
+    "XDT_MicrosoftApplicationInsights_Mode"           = "recommended"
+    "XDT_MicrosoftApplicationInsights_PreemptSdk"     = "disabled"
+  }
+
+  logs {
+    detailed_error_messages = false
+    failed_request_tracing  = false
+
+    http_logs {
+      file_system {
+        retention_in_days = 7
+        retention_in_mb   = 35
+      }
+    }
+  }
+
+  tags = {
+    "hidden-link: /app-insights-conn-string"         = azurerm_application_insights.staging.connection_string
+    "hidden-link: /app-insights-instrumentation-key" = azurerm_application_insights.staging.instrumentation_key
+    "hidden-link: /app-insights-resource-id"         = replace(azurerm_application_insights.staging.id, "Microsoft.Insights", "microsoft.insights")
+  }
 
   identity {
     type = "SystemAssigned"
@@ -430,14 +545,18 @@ resource "azurerm_linux_web_app" "core_nginx" {
   # Docker container: aasworldwidetelescope/nginx-core:latest
 
   app_settings = {
-    "PUBLIC_FACING_DOMAIN_NAME"  = "worldwidetelescope.org"
-    "DOCKER_ENABLE_CI"           = "true"
-    "DOCKER_REGISTRY_SERVER_URL" = "https://index.docker.io/v1"
+    "PUBLIC_FACING_DOMAIN_NAME" = "worldwidetelescope.org"
+    "DOCKER_ENABLE_CI"          = "true"
   }
 
   site_config {
     always_on        = false
     app_command_line = ""
+
+    application_stack {
+      docker_image_name   = "aasworldwidetelescope/nginx-core:latest"
+      docker_registry_url = "https://index.docker.io/v1"
+    }
 
     # Added 2022 Sep to match ground truth:
     ftps_state              = "AllAllowed"
@@ -618,6 +737,7 @@ resource "azurerm_windows_web_app_slot" "communities_stage" {
     # Added to reflect ground truth, 2022-Sep:
     ftps_state              = "AllAllowed"
     scm_minimum_tls_version = "1.0"
+
     virtual_application {
       physical_path = "site\\wwwroot"
       preload       = false

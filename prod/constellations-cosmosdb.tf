@@ -25,6 +25,7 @@ resource "azurerm_cosmosdb_account" "cx_backend" {
   resource_group_name = azurerm_resource_group.cx_backend.name
   offer_type          = "Standard"
   kind                = "MongoDB"
+  minimal_tls_version = "Tls" # added 2024 Dec to match ground truth
 
   geo_location {
     location          = azurerm_resource_group.cx_backend.location

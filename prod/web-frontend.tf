@@ -30,13 +30,21 @@ resource "azurerm_virtual_network" "frontend" {
   address_space       = ["192.168.0.0/16"]
 
   subnet {
-    name           = "subnet-1"
-    address_prefix = "192.168.1.0/24"
+    name             = "subnet-1"
+    address_prefixes = ["192.168.1.0/24"]
+
+    # added 2024 Dec to match ground truth:
+    default_outbound_access_enabled   = false
+    private_endpoint_network_policies = "Enabled"
   }
 
   subnet {
-    name           = "GatewaySubnet"
-    address_prefix = "192.168.0.0/24"
+    name             = "GatewaySubnet"
+    address_prefixes = ["192.168.0.0/24"]
+
+    # added 2024 Dec to match ground truth:
+    default_outbound_access_enabled   = false
+    private_endpoint_network_policies = "Enabled"
   }
 
   lifecycle {
@@ -214,6 +222,10 @@ resource "azurerm_application_gateway" "frontend" {
     protocol                                  = "Http"
     path                                      = "/auth/"
     unhealthy_threshold                       = 3
+
+    match {
+      status_code = ["200-399"]
+    }
   }
 
   # Request routing rules
