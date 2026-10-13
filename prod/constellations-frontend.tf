@@ -15,11 +15,11 @@ resource "azurerm_linux_web_app" "cx_frontend" {
   service_plan_id     = azurerm_service_plan.cx_backend.id
 
   app_settings = {
-    "NUXT_APP_CDN_URL"                 = "https://${azurerm_cdn_endpoint_custom_domain.general.host_name}/"
     "NUXT_PUBLIC_API_URL"              = "https://api.${var.tld}"
     "NUXT_PUBLIC_GOOGLE_ANALYTICS_TAG" = var.googleAnalyticsTag
     "NUXT_PUBLIC_HOST_URL"             = "https://${var.tld}"
     "NUXT_PUBLIC_KEYCLOAK_URL"         = "https://${var.tld}/auth"
+    "NUXT_APP_BASE_URL"                = "/constellations/"
   }
 
   site_config {

@@ -26,6 +26,7 @@ resource "azurerm_linux_web_app" "cx_frontend" {
     "NUXT_PUBLIC_GOOGLE_ANALYTICS_TAG" = var.googleAnalyticsTag
     "NUXT_PUBLIC_HOST_URL"             = "https://${var.tld}"
     "NUXT_PUBLIC_KEYCLOAK_URL"         = "https://${var.tld}/auth"
+    "NUXT_APP_BASE_URL"                = "/constellations/"
   }
 
   site_config {
