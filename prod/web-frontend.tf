@@ -210,6 +210,17 @@ resource "azurerm_application_gateway" "frontend" {
     probe_name                          = "keycloak"
   }
 
+  backend_http_settings {
+    name                                = "constellations"
+    cookie_based_affinity               = "Disabled"
+    pick_host_name_from_backend_address = true
+    port                                = 80
+    protocol                            = "Http"
+    request_timeout                     = 20
+    trusted_root_certificate_names      = []
+    probe_name                          = "constellations"
+  }
+
   # Probes
 
   probe {
@@ -221,6 +232,22 @@ resource "azurerm_application_gateway" "frontend" {
     timeout                                   = 30
     protocol                                  = "Http"
     path                                      = "/auth/"
+    unhealthy_threshold                       = 3
+
+    match {
+      status_code = ["200-399"]
+    }
+  }
+
+  probe {
+    # Constellations needs a custom probe as the root path is located at
+    # /constellations, not /
+    name                                      = "constellations"
+    pick_host_name_from_backend_http_settings = true
+    interval                                  = 30
+    timeout                                   = 30
+    protocol                                  = "Http"
+    path                                      = "/constellations/"
     unhealthy_threshold                       = 3
 
     match {
